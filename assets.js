@@ -7,64 +7,58 @@ const ASSETS = {
     // Base path for assets
     basePath: 'assets/',
 
-    // Ground tiles (city pack)
-    ground: {
-        grass: 'city/PNG/cityTiles_090.png',          // Plain grass
-        sidewalk: 'city/PNG/cityTiles_105.png',       // Sidewalk
-        road: {
-            straight: 'city/PNG/cityTiles_010.png',   // Straight road
-            corner: 'city/PNG/cityTiles_020.png',     // Corner road
-            intersection: 'city/PNG/cityTiles_030.png', // Intersection
-            end: 'city/PNG/cityTiles_015.png',        // Road end
-        },
-        parking: 'city/PNG/cityTiles_050.png',        // Parking lot
-        park: 'city/PNG/cityTiles_061.png',           // Park/grass with path
-    },
+    // Complete buildings from PabloGameDev pack (voxel style)
+    buildings: [
+        { id: 'house1', file: 'pablo/House 1.png', name: 'House' },
+        { id: 'house2', file: 'pablo/House 2.png', name: 'House' },
+        { id: 'house3', file: 'pablo/House 3.png', name: 'House' },
+        { id: 'shop', file: 'pablo/Shop.png', name: 'Shop' },
+        { id: 'office', file: 'pablo/Office.png', name: 'Office' },
+        { id: 'build1', file: 'pablo/Build 1.png', name: 'Building' },
+        { id: 'build2', file: 'pablo/Build 2.png', name: 'Building' },
+        { id: 'bar', file: 'pablo/Bar.png', name: 'Bar' },
+        { id: 'hospital', file: 'pablo/Hospital.png', name: 'Hospital' },
+        { id: 'church', file: 'pablo/Church.png', name: 'Church' },
+        { id: 'playground', file: 'pablo/Playground.png', name: 'Playground' },
+        { id: 'greenhouse', file: 'pablo/Greenhouse.png', name: 'Greenhouse' },
+        { id: 'henhouse', file: 'pablo/Hen house.png', name: 'Hen House' },
+        { id: 'fishinghut', file: 'pablo/fishing hut.png', name: 'Fishing Hut' },
+        { id: 'waterwell', file: 'pablo/Water well.png', name: 'Water Well' },
+        { id: 'simplepark', file: 'pablo/Simple Park.png', name: 'Park' },
+        { id: 'tennis', file: 'pablo/Tennis 1.png', name: 'Tennis Court' },
+        { id: 'cornfield', file: 'pablo/Cornfield.png', name: 'Cornfield' },
+        { id: 'graveyard', file: 'pablo/Graveyard.png', name: 'Graveyard' },
+    ],
 
-    // Building pieces (modular - stack these!)
-    buildings: {
-        // Ground floors (bases)
-        bases: [
-            { id: 'shop_blue', file: 'buildings/PNG/buildingTiles_000.png' },
-            { id: 'shop_red', file: 'buildings/PNG/buildingTiles_010.png' },
-            { id: 'office_tan', file: 'buildings/PNG/buildingTiles_020.png' },
-            { id: 'office_gray', file: 'buildings/PNG/buildingTiles_030.png' },
-        ],
-        // Middle floors (stack on bases)
-        floors: [
-            { id: 'floor_tan', file: 'buildings/PNG/buildingTiles_050.png' },
-            { id: 'floor_gray', file: 'buildings/PNG/buildingTiles_051.png' },
-            { id: 'floor_white', file: 'buildings/PNG/buildingTiles_052.png' },
-            { id: 'floor_red', file: 'buildings/PNG/buildingTiles_053.png' },
-        ],
-        // Roofs (top pieces)
-        roofs: [
-            { id: 'roof_flat_tan', file: 'buildings/PNG/buildingTiles_080.png' },
-            { id: 'roof_flat_gray', file: 'buildings/PNG/buildingTiles_081.png' },
-            { id: 'roof_peaked_tan', file: 'buildings/PNG/buildingTiles_090.png' },
-            { id: 'roof_peaked_red', file: 'buildings/PNG/buildingTiles_091.png' },
-        ],
-    },
-
-    // Decorations/props
+    // Decorations from PabloGameDev environment pack
     decorations: {
         trees: [
-            { id: 'tree_green', file: 'city/Details/cityDetails_010.png', weight: 3 },
+            { id: 'tree1', file: 'pablo/Voxel Isometric enviroment/Arbol 1 PNg.png', weight: 5 },
+            { id: 'tree2', file: 'pablo/Voxel Isometric enviroment/Arbol 2 PNg.png', weight: 5 },
+            { id: 'tree3', file: 'pablo/Voxel Isometric enviroment/Arbol 3 PNg.png', weight: 4 },
+            { id: 'tree4', file: 'pablo/Voxel Isometric enviroment/Arbol 4 PNg.png', weight: 4 },
+            { id: 'tree5', file: 'pablo/Voxel Isometric enviroment/Arbol 5 PNg.png', weight: 3 },
         ],
-        props: [
-            { id: 'lamppost_single', file: 'city/Details/cityDetails_000.png', weight: 2 },
-            { id: 'bus_stop_left', file: 'city/Details/cityDetails_001.png', weight: 1 },
-            { id: 'bus_stop_right', file: 'city/Details/cityDetails_002.png', weight: 1 },
-            { id: 'bench_left', file: 'city/Details/cityDetails_008.png', weight: 2 },
-            { id: 'bench_right', file: 'city/Details/cityDetails_009.png', weight: 2 },
-            { id: 'lamppost_tall', file: 'city/Details/cityDetails_005.png', weight: 2 },
+        bushes: [
+            { id: 'bush1', file: 'pablo/Voxel Isometric enviroment/Arbusto 1 PNg.png', weight: 3 },
+            { id: 'bush2', file: 'pablo/Voxel Isometric enviroment/Arbusto 2 PNg.png', weight: 3 },
+            { id: 'bush3', file: 'pablo/Voxel Isometric enviroment/Arbusto 3 PNg.png', weight: 3 },
+        ],
+        flowers: [
+            { id: 'flower1', file: 'pablo/Voxel Isometric enviroment/Flower 1.png', weight: 2 },
+            { id: 'flower2', file: 'pablo/Voxel Isometric enviroment/Flower 2.png', weight: 2 },
+            { id: 'flower3', file: 'pablo/Voxel Isometric enviroment/Flower 3.png', weight: 2 },
+        ],
+        rocks: [
+            { id: 'rock1', file: 'pablo/Voxel Isometric enviroment/Rocas 1 PNg.png', weight: 2 },
+            { id: 'rock2', file: 'pablo/Voxel Isometric enviroment/Rocas 2 PNg.png', weight: 2 },
+            { id: 'rock3', file: 'pablo/Voxel Isometric enviroment/Rocas 3 PNg.png', weight: 2 },
         ],
     },
 
-    // Tile dimensions (isometric)
-    tileWidth: 128,
-    tileHeight: 64,
-    floorHeight: 40, // How much to offset each floor vertically
+    // Tile dimensions (isometric) - adjusted for new assets
+    tileWidth: 200,
+    tileHeight: 100,
 };
 
 /**
@@ -79,35 +73,23 @@ class AssetLoader {
     async loadAll() {
         const imagesToLoad = [];
 
-        // Collect all image paths
-        // Ground tiles
-        imagesToLoad.push({ key: 'ground_grass', path: ASSETS.ground.grass });
-        imagesToLoad.push({ key: 'ground_sidewalk', path: ASSETS.ground.sidewalk });
-        imagesToLoad.push({ key: 'ground_road_straight', path: ASSETS.ground.road.straight });
-        imagesToLoad.push({ key: 'ground_parking', path: ASSETS.ground.parking });
-        imagesToLoad.push({ key: 'ground_park', path: ASSETS.ground.park });
-
-        // Building bases
-        ASSETS.buildings.bases.forEach(b => {
-            imagesToLoad.push({ key: `base_${b.id}`, path: b.file });
+        // Load all buildings
+        ASSETS.buildings.forEach(b => {
+            imagesToLoad.push({ key: `building_${b.id}`, path: b.file });
         });
 
-        // Building floors
-        ASSETS.buildings.floors.forEach(f => {
-            imagesToLoad.push({ key: `floor_${f.id}`, path: f.file });
-        });
-
-        // Building roofs
-        ASSETS.buildings.roofs.forEach(r => {
-            imagesToLoad.push({ key: `roof_${r.id}`, path: r.file });
-        });
-
-        // Decorations
+        // Load all decorations
         ASSETS.decorations.trees.forEach(t => {
             imagesToLoad.push({ key: `tree_${t.id}`, path: t.file });
         });
-        ASSETS.decorations.props.forEach(p => {
-            imagesToLoad.push({ key: `prop_${p.id}`, path: p.file });
+        ASSETS.decorations.bushes.forEach(b => {
+            imagesToLoad.push({ key: `bush_${b.id}`, path: b.file });
+        });
+        ASSETS.decorations.flowers.forEach(f => {
+            imagesToLoad.push({ key: `flower_${f.id}`, path: f.file });
+        });
+        ASSETS.decorations.rocks.forEach(r => {
+            imagesToLoad.push({ key: `rock_${r.id}`, path: r.file });
         });
 
         // Load all images

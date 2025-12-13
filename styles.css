@@ -56,6 +56,8 @@ h1 {
 .habits-section {
     flex: 1;
     overflow-y: auto;
+    padding-right: 8px;
+    margin-right: -8px;
 }
 
 .habits-header {
@@ -180,27 +182,146 @@ h1 {
     padding: 16px;
     background: var(--surface);
     border-radius: 8px;
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
-.add-habit-form input {
-    width: 100%;
+.custom-habit-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.custom-habit-row input {
+    flex: 1;
     padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 6px;
     background: var(--bg-sidebar);
     color: var(--text);
     font-size: 14px;
-    margin-bottom: 12px;
 }
 
-.add-habit-form input:focus {
+.custom-habit-row input:focus {
     outline: none;
     border-color: var(--primary);
 }
 
-.form-buttons {
+/* Habit Categories (Dropdowns) */
+.habit-category {
+    margin-bottom: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.habit-category-header {
     display: flex;
+    align-items: center;
     gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.habit-category-header:hover {
+    background: var(--surface-hover);
+}
+
+.habit-category-arrow {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+
+.habit-category.expanded .habit-category-arrow {
+    transform: rotate(90deg);
+}
+
+.habit-category-title {
+    flex: 1;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.habit-category-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-sidebar);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.habit-list {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 12px;
+}
+
+.habit-category.expanded .habit-list {
+    display: flex;
+}
+
+.habit-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.habit-chip:hover {
+    border-color: var(--primary);
+    background: var(--surface-hover);
+}
+
+.habit-chip.completed {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.habit-chip.completed:hover {
+    background: #3fc770;
+    border-color: #3fc770;
+}
+
+.habit-check {
+    font-size: 11px;
+    min-width: 14px;
+}
+
+.habit-chip .habit-name {
+    flex: 1;
+}
+
+.habit-chip .habit-delete {
+    opacity: 0;
+    font-size: 16px;
+    line-height: 1;
+    margin-left: 4px;
+    transition: opacity 0.2s;
+}
+
+.habit-chip:hover .habit-delete {
+    opacity: 0.6;
+}
+
+.habit-chip .habit-delete:hover {
+    opacity: 1;
+    color: var(--primary);
 }
 
 .btn {
@@ -310,4 +431,97 @@ h1 {
 
 .habit-item {
     animation: fadeIn 0.2s ease-out;
+}
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-sidebar);
+    color: var(--text);
+    padding: 14px 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    font-size: 15px;
+    max-width: 400px;
+    text-align: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: 1px solid var(--border);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* World Selector */
+.world-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.world-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.world-btn:hover:not(.locked) {
+    background: var(--surface-hover);
+    border-color: var(--primary);
+}
+
+.world-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.world-btn.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.world-btn.locked:hover {
+    background: var(--surface);
+}
+
+.world-icon {
+    font-size: 24px;
+}
+
+.world-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.world-lock {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 10px;
+}
+
+.world-btn.active .world-name {
+    color: white;
+}
+
+.world-btn:not(.locked):not(.active) .world-lock {
+    display: none;
 }

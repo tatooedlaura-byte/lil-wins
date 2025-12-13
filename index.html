@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiny Habits City</title>
+    <title>Tiny Habits World</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app">
         <aside class="sidebar">
             <h1>Tiny Habits</h1>
-            <p class="subtitle">Build your city, one habit at a time</p>
+            <p class="subtitle" id="world-subtitle">Build your kingdom, one habit at a time</p>
 
-            <div class="habits-section">
-                <div class="habits-header">
-                    <h2>Today's Habits</h2>
-                    <button id="add-habit-btn" class="btn-icon" title="Add habit">+</button>
-                </div>
-                <ul id="habits-list"></ul>
+            <div class="world-selector">
+                <button class="world-btn active" data-world="kingdom" title="Medieval Kingdom">
+                    <span class="world-icon">🏰</span>
+                    <span class="world-name">Kingdom</span>
+                </button>
+                <button class="world-btn locked" data-world="city" title="Modern City (Unlock at 50 tiles)">
+                    <span class="world-icon">🏙️</span>
+                    <span class="world-name">City</span>
+                    <span class="world-lock">🔒</span>
+                </button>
             </div>
 
-            <div class="add-habit-form hidden" id="add-habit-form">
-                <input type="text" id="new-habit-input" placeholder="Enter a tiny habit...">
-                <div class="form-buttons">
-                    <button id="save-habit-btn" class="btn btn-primary">Add</button>
-                    <button id="cancel-habit-btn" class="btn btn-secondary">Cancel</button>
+            <div class="habits-section">
+                <div class="custom-habit-row">
+                    <input type="text" id="new-habit-input" placeholder="Add your own habit...">
+                    <button id="save-habit-btn" class="btn-icon" title="Add habit">+</button>
                 </div>
+                <div id="habits-list"></div>
             </div>
 
             <div class="stats">
@@ -34,23 +38,28 @@
                     <span class="stat-label">Buildings</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-value" id="floors-count">0</span>
-                    <span class="stat-label">Floors</span>
-                </div>
-                <div class="stat">
                     <span class="stat-value" id="decorations-count">0</span>
-                    <span class="stat-label">Trees & Props</span>
+                    <span class="stat-label">Tiles</span>
                 </div>
             </div>
         </aside>
 
-        <main class="city-view">
-            <canvas id="city-canvas"></canvas>
+        <main class="city-view" id="kingdom-container">
+            <!-- Three.js canvas will be inserted here -->
         </main>
     </div>
 
-    <script src="assets.js"></script>
-    <script src="city.js"></script>
+    <!-- Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="kingdom.js"></script>
+    <script type="module" src="city.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

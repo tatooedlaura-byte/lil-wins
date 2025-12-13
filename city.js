@@ -1,423 +1,498 @@
-/**
- * City rendering and management for Tiny Habits City
- * Handles isometric grid, building placement, and city growth
- */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+// City class - builds a proper city with roads and buildings
 class City {
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-        this.gridSize = 15; // 15x15 grid
-        this.grid = []; // 2D array of cell data
-        this.buildings = []; // List of buildings with their growth state
-        this.decorations = []; // List of decorations
+    constructor(container) {
+        this.container = container;
+        this.grid = new Map(); // Map of "x,y" -> tile data
+        this.models = {};
+        this.tileSize = 2; // Each tile is 2 units (from -1 to 1)
+        this.gridRadius = 8; // City extends from -8 to 8
+        this.mixers = [];
+        this.clock = new THREE.Clock();
 
-        // Isometric settings
-        this.tileWidth = 128;
-        this.tileHeight = 64;
-        this.floorHeight = 40;
-
-        // Camera/view offset (to center the city)
-        this.offsetX = 0;
-        this.offsetY = 0;
-
-        this.initGrid();
-        this.resize();
-
-        // Handle window resize
-        window.addEventListener('resize', () => this.resize());
+        this.init();
+        this.loadModels();
     }
 
-    initGrid() {
-        // Initialize empty grid
-        for (let y = 0; y < this.gridSize; y++) {
-            this.grid[y] = [];
-            for (let x = 0; x < this.gridSize; x++) {
-                this.grid[y][x] = {
-                    type: 'grass', // grass, road, building, decoration
-                    occupied: false,
-                    building: null,
-                    decoration: null,
-                };
+    init() {
+        // Scene
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x87CEEB);
+
+        // Camera
+        const aspect = this.container.clientWidth / this.container.clientHeight;
+        this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+        this.camera.position.set(15, 20, 15);
+        this.camera.lookAt(0, 0, 0);
+
+        // Renderer
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.container.appendChild(this.renderer.domElement);
+
+        // Controls
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.minDistance = 8;
+        this.controls.maxDistance = 50;
+        this.controls.maxPolarAngle = Math.PI / 2.2;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        this.scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 50;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 20;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
+        this.scene.add(dirLight);
+
+        window.addEventListener('resize', () => this.onResize());
+        this.animate();
+    }
+
+    async loadModels() {
+        this.loader = new GLTFLoader();
+        this.textureLoader = new THREE.TextureLoader();
+
+        // Load texture
+        const texturePath = 'assets/kaykit/city/citybits_texture.png';
+        this.sharedTexture = await this.textureLoader.loadAsync(texturePath);
+        this.sharedTexture.flipY = false;
+
+        // All available models
+        this.modelPaths = {
+            // Roads
+            road_straight: 'assets/kaykit/city/road_straight.gltf',
+            road_corner: 'assets/kaykit/city/road_corner.gltf',
+            road_tsplit: 'assets/kaykit/city/road_tsplit.gltf',
+            road_junction: 'assets/kaykit/city/road_junction.gltf',
+
+            // Buildings (with base)
+            building_A: 'assets/kaykit/city/building_A.gltf',
+            building_B: 'assets/kaykit/city/building_B.gltf',
+            building_C: 'assets/kaykit/city/building_C.gltf',
+            building_D: 'assets/kaykit/city/building_D.gltf',
+            building_E: 'assets/kaykit/city/building_E.gltf',
+            building_F: 'assets/kaykit/city/building_F.gltf',
+            building_G: 'assets/kaykit/city/building_G.gltf',
+            building_H: 'assets/kaykit/city/building_H.gltf',
+
+            // Decorations
+            bush: 'assets/kaykit/city/bush.gltf',
+            bench: 'assets/kaykit/city/bench.gltf',
+            streetlight: 'assets/kaykit/city/streetlight.gltf',
+            firehydrant: 'assets/kaykit/city/firehydrant.gltf',
+            trash_A: 'assets/kaykit/city/trash_A.gltf',
+            trafficlight_A: 'assets/kaykit/city/trafficlight_A.gltf',
+        };
+
+        // Building tiers (small to large)
+        this.buildingTiers = [
+            ['building_A', 'building_B'],           // Tier 0: small
+            ['building_C', 'building_D'],           // Tier 1: medium
+            ['building_E', 'building_F'],           // Tier 2: large
+            ['building_G', 'building_H'],           // Tier 3: skyscrapers
+        ];
+
+        console.log('City initialized');
+        this.loaded = true;
+
+        // Start with initial layout if no save
+        const hasSave = localStorage.getItem('tinyHabitsCity');
+        if (!hasSave) {
+            await this.buildInitialRoads();
+        }
+    }
+
+    async loadModel(modelId) {
+        if (this.models[modelId]) return this.models[modelId];
+
+        const path = this.modelPaths[modelId];
+        if (!path) {
+            console.warn(`Unknown model: ${modelId}`);
+            return null;
+        }
+
+        try {
+            const gltf = await this.loader.loadAsync(path);
+            const model = gltf.scene;
+
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshStandardMaterial({
+                        map: this.sharedTexture,
+                        roughness: 0.8,
+                        metalness: 0.1,
+                    });
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            this.models[modelId] = model;
+            return model;
+        } catch (e) {
+            console.warn(`Failed to load ${modelId}:`, e);
+            return null;
+        }
+    }
+
+    key(x, y) {
+        return `${x},${y}`;
+    }
+
+    worldPos(x, y) {
+        return {
+            x: x * this.tileSize,
+            z: y * this.tileSize
+        };
+    }
+
+    // Build the initial road grid
+    async buildInitialRoads() {
+        // Create a cross of roads at the center
+        await this.placeRoad(0, 0);
+    }
+
+    // Get adjacent road count and directions
+    getAdjacentRoads(x, y) {
+        const dirs = [
+            { dx: 1, dy: 0, bit: 0 },  // East
+            { dx: 0, dy: -1, bit: 1 }, // North
+            { dx: -1, dy: 0, bit: 2 }, // West
+            { dx: 0, dy: 1, bit: 3 },  // South
+        ];
+
+        const adjacent = [];
+        for (const dir of dirs) {
+            const tile = this.grid.get(this.key(x + dir.dx, y + dir.dy));
+            if (tile && tile.type === 'road') {
+                adjacent.push(dir.bit);
             }
         }
+        return adjacent;
+    }
 
-        // Place some initial roads in a cross pattern through center
-        const center = Math.floor(this.gridSize / 2);
-        for (let i = 0; i < this.gridSize; i++) {
-            this.grid[center][i].type = 'road';
-            this.grid[center][i].occupied = true;
-            this.grid[i][center].type = 'road';
-            this.grid[i][center].occupied = true;
+    // Choose road model based on connections
+    getRoadModel(connections) {
+        const count = connections.length;
+
+        if (count === 0) {
+            return { model: 'road_straight', rotation: 0 };
         }
+        if (count === 1) {
+            // Dead end - use straight pointing toward connection
+            const rot = connections[0] * (Math.PI / 2);
+            return { model: 'road_straight', rotation: rot };
+        }
+        if (count === 2) {
+            const [a, b] = connections.sort((x, y) => x - y);
+            if ((b - a) === 2) {
+                // Straight road
+                return { model: 'road_straight', rotation: (a % 2) * (Math.PI / 2) };
+            } else {
+                // Corner
+                return { model: 'road_corner', rotation: a * (Math.PI / 2) };
+            }
+        }
+        if (count === 3) {
+            // T-split - find missing direction
+            const all = [0, 1, 2, 3];
+            const missing = all.find(d => !connections.includes(d));
+            return { model: 'road_tsplit', rotation: ((missing + 2) % 4) * (Math.PI / 2) };
+        }
+        // 4-way junction
+        return { model: 'road_junction', rotation: 0 };
     }
 
-    resize() {
-        // Set canvas to fill container
-        const container = this.canvas.parentElement;
-        this.canvas.width = container.clientWidth;
-        this.canvas.height = container.clientHeight;
+    async placeRoad(x, y) {
+        const k = this.key(x, y);
+        if (this.grid.has(k)) return null;
 
-        // Center the grid in the view
-        this.offsetX = this.canvas.width / 2;
-        this.offsetY = this.canvas.height / 3;
+        const connections = this.getAdjacentRoads(x, y);
+        const { model: modelId, rotation } = this.getRoadModel(connections);
 
-        this.render();
+        const model = await this.loadModel(modelId);
+        if (!model) return null;
+
+        const pos = this.worldPos(x, y);
+        const mesh = model.clone();
+        mesh.position.set(pos.x, 0, pos.z);
+        mesh.rotation.y = rotation;
+        this.scene.add(mesh);
+
+        this.grid.set(k, {
+            type: 'road',
+            modelId,
+            mesh,
+            x, y
+        });
+
+        // Update neighboring roads
+        await this.updateAdjacentRoads(x, y);
+
+        return { type: 'road', name: 'Road' };
     }
 
-    // Convert grid coordinates to screen (isometric) coordinates
-    gridToScreen(gridX, gridY) {
-        const screenX = (gridX - gridY) * (this.tileWidth / 2) + this.offsetX;
-        const screenY = (gridX + gridY) * (this.tileHeight / 2) + this.offsetY;
-        return { x: screenX, y: screenY };
-    }
+    async updateAdjacentRoads(x, y) {
+        const dirs = [
+            { dx: 1, dy: 0 },
+            { dx: 0, dy: -1 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+        ];
 
-    // Find a valid spot for a new building (adjacent to existing buildings or roads)
-    findBuildingSpot() {
-        const candidates = [];
-        const center = Math.floor(this.gridSize / 2);
+        for (const dir of dirs) {
+            const nx = x + dir.dx;
+            const ny = y + dir.dy;
+            const tile = this.grid.get(this.key(nx, ny));
 
-        // First, find cells adjacent to roads or existing buildings
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
-                const cell = this.grid[y][x];
+            if (tile && tile.type === 'road') {
+                // Recalculate this road's model
+                const connections = this.getAdjacentRoads(nx, ny);
+                const { model: modelId, rotation } = this.getRoadModel(connections);
 
-                // Skip if already occupied
-                if (cell.occupied) continue;
+                if (modelId !== tile.modelId) {
+                    // Remove old mesh
+                    this.scene.remove(tile.mesh);
 
-                // Check if adjacent to road or building
-                const neighbors = this.getNeighbors(x, y);
-                const hasAdjacentRoad = neighbors.some(n => n.type === 'road');
-                const hasAdjacentBuilding = neighbors.some(n => n.type === 'building');
+                    // Add new mesh
+                    const model = await this.loadModel(modelId);
+                    if (model) {
+                        const pos = this.worldPos(nx, ny);
+                        const mesh = model.clone();
+                        mesh.position.set(pos.x, 0, pos.z);
+                        mesh.rotation.y = rotation;
+                        this.scene.add(mesh);
 
-                if (hasAdjacentRoad || hasAdjacentBuilding) {
-                    // Weight by distance from center (prefer closer to center)
-                    const distFromCenter = Math.abs(x - center) + Math.abs(y - center);
-                    candidates.push({ x, y, weight: 20 - distFromCenter });
+                        tile.modelId = modelId;
+                        tile.mesh = mesh;
+                    }
+                } else {
+                    // Just update rotation
+                    tile.mesh.rotation.y = rotation;
                 }
             }
         }
+    }
 
-        if (candidates.length === 0) {
-            // Fallback: find any unoccupied grass
-            for (let y = 0; y < this.gridSize; y++) {
-                for (let x = 0; x < this.gridSize; x++) {
-                    if (!this.grid[y][x].occupied) {
-                        candidates.push({ x, y, weight: 1 });
+    async placeBuilding(x, y, buildingId) {
+        const k = this.key(x, y);
+        if (this.grid.has(k)) return null;
+
+        const model = await this.loadModel(buildingId);
+        if (!model) return null;
+
+        const pos = this.worldPos(x, y);
+        const mesh = model.clone();
+        mesh.position.set(pos.x, 0, pos.z);
+        mesh.rotation.y = Math.floor(Math.random() * 4) * (Math.PI / 2);
+        this.scene.add(mesh);
+
+        this.grid.set(k, {
+            type: 'building',
+            modelId: buildingId,
+            mesh,
+            x, y
+        });
+
+        return { type: 'building', name: buildingId };
+    }
+
+    // Find spots adjacent to roads that don't have buildings
+    findBuildingSpots() {
+        const spots = [];
+        const dirs = [
+            { dx: 1, dy: 0 },
+            { dx: 0, dy: -1 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+        ];
+
+        for (const [, tile] of this.grid) {
+            if (tile.type === 'road') {
+                for (const dir of dirs) {
+                    const nx = tile.x + dir.dx;
+                    const ny = tile.y + dir.dy;
+                    const k = this.key(nx, ny);
+
+                    if (!this.grid.has(k) && Math.abs(nx) <= this.gridRadius && Math.abs(ny) <= this.gridRadius) {
+                        // Check this spot isn't already in our list
+                        if (!spots.find(s => s.x === nx && s.y === ny)) {
+                            const dist = Math.abs(nx) + Math.abs(ny);
+                            spots.push({ x: nx, y: ny, dist });
+                        }
                     }
                 }
             }
         }
 
-        if (candidates.length === 0) return null;
-
-        // Weighted random selection
-        const totalWeight = candidates.reduce((sum, c) => sum + c.weight, 0);
-        let random = Math.random() * totalWeight;
-
-        for (const candidate of candidates) {
-            random -= candidate.weight;
-            if (random <= 0) {
-                return { x: candidate.x, y: candidate.y };
-            }
-        }
-
-        return candidates[0];
+        return spots;
     }
 
-    // Find a valid spot for decoration (near buildings/roads but not on them)
-    findDecorationSpot() {
-        const candidates = [];
+    // Find spots to extend roads
+    findRoadExtensionSpots() {
+        const spots = [];
+        const dirs = [
+            { dx: 1, dy: 0 },
+            { dx: 0, dy: -1 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+        ];
 
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
-                const cell = this.grid[y][x];
+        for (const [, tile] of this.grid) {
+            if (tile.type === 'road') {
+                for (const dir of dirs) {
+                    const nx = tile.x + dir.dx;
+                    const ny = tile.y + dir.dy;
+                    const k = this.key(nx, ny);
 
-                // Can place decorations on grass that isn't occupied
-                if (cell.type === 'grass' && !cell.occupied) {
-                    const neighbors = this.getNeighbors(x, y);
-                    const nearRoadOrBuilding = neighbors.some(n =>
-                        n.type === 'road' || n.type === 'building'
-                    );
-
-                    if (nearRoadOrBuilding) {
-                        candidates.push({ x, y, weight: 3 });
-                    } else {
-                        candidates.push({ x, y, weight: 1 });
+                    if (!this.grid.has(k) && Math.abs(nx) <= this.gridRadius && Math.abs(ny) <= this.gridRadius) {
+                        if (!spots.find(s => s.x === nx && s.y === ny)) {
+                            const dist = Math.abs(nx) + Math.abs(ny);
+                            spots.push({ x: nx, y: ny, dist });
+                        }
                     }
                 }
             }
         }
 
-        if (candidates.length === 0) return null;
+        return spots;
+    }
 
-        // Weighted random selection
-        const totalWeight = candidates.reduce((sum, c) => sum + c.weight, 0);
-        let random = Math.random() * totalWeight;
+    // Main grow function - called when habits are completed
+    async grow() {
+        const tileCount = this.grid.size;
 
-        for (const candidate of candidates) {
-            random -= candidate.weight;
-            if (random <= 0) {
-                return { x: candidate.x, y: candidate.y };
+        // Strategy: alternate between roads and buildings
+        // Start with more roads, then fill in buildings
+        const shouldPlaceRoad = tileCount < 5 || (tileCount % 3 === 0);
+
+        if (shouldPlaceRoad) {
+            const roadSpots = this.findRoadExtensionSpots();
+            if (roadSpots.length > 0) {
+                // Prefer extending in a grid pattern
+                roadSpots.sort((a, b) => a.dist - b.dist);
+                const spot = roadSpots[Math.floor(Math.random() * Math.min(3, roadSpots.length))];
+                return await this.placeRoad(spot.x, spot.y);
             }
         }
 
-        return candidates[0];
-    }
+        // Place a building
+        const buildingSpots = this.findBuildingSpots();
+        if (buildingSpots.length > 0) {
+            // Sort by distance - closer to center = taller buildings
+            buildingSpots.sort((a, b) => a.dist - b.dist);
+            const spot = buildingSpots[Math.floor(Math.random() * Math.min(5, buildingSpots.length))];
 
-    getNeighbors(x, y) {
-        const neighbors = [];
-        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            // Pick building tier based on distance from center
+            let tier;
+            if (spot.dist <= 2) tier = 3;      // Downtown skyscrapers
+            else if (spot.dist <= 4) tier = 2; // Large buildings
+            else if (spot.dist <= 6) tier = 1; // Medium buildings
+            else tier = 0;                      // Small buildings
 
-        for (const [dx, dy] of dirs) {
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx >= 0 && nx < this.gridSize && ny >= 0 && ny < this.gridSize) {
-                neighbors.push(this.grid[ny][nx]);
-            }
+            const buildings = this.buildingTiers[tier];
+            const buildingId = buildings[Math.floor(Math.random() * buildings.length)];
+
+            return await this.placeBuilding(spot.x, spot.y, buildingId);
         }
 
-        return neighbors;
-    }
-
-    // Add a floor to a building, or create new building if current one is maxed
-    growCity() {
-        // Find a building that can still grow
-        const growableBuilding = this.buildings.find(b => b.floors < b.maxFloors);
-
-        if (growableBuilding) {
-            // Add a floor to existing building
-            growableBuilding.floors++;
-            this.render();
-            return { type: 'floor', building: growableBuilding };
-        } else {
-            // Create a new building
-            const spot = this.findBuildingSpot();
-            if (spot) {
-                const building = this.createBuilding(spot.x, spot.y);
-                this.render();
-                return { type: 'building', building };
-            }
+        // If no building spots, try roads again
+        const roadSpots = this.findRoadExtensionSpots();
+        if (roadSpots.length > 0) {
+            const spot = roadSpots[Math.floor(Math.random() * roadSpots.length)];
+            return await this.placeRoad(spot.x, spot.y);
         }
 
         return null;
     }
 
-    // Add a decoration to the city
-    addDecoration() {
-        const spot = this.findDecorationSpot();
-        if (!spot) return null;
-
-        // Pick a random decoration (tree or prop)
-        const allDecorations = [
-            ...ASSETS.decorations.trees,
-            ...ASSETS.decorations.props,
-        ];
-
-        // Weighted random selection
-        const totalWeight = allDecorations.reduce((sum, d) => sum + d.weight, 0);
-        let random = Math.random() * totalWeight;
-        let decoration = allDecorations[0];
-
-        for (const d of allDecorations) {
-            random -= d.weight;
-            if (random <= 0) {
-                decoration = d;
-                break;
-            }
-        }
-
-        const newDecoration = {
-            x: spot.x,
-            y: spot.y,
-            type: decoration.id,
-            assetKey: ASSETS.decorations.trees.includes(decoration)
-                ? `tree_${decoration.id}`
-                : `prop_${decoration.id}`,
-        };
-
-        this.decorations.push(newDecoration);
-        this.grid[spot.y][spot.x].occupied = true;
-        this.grid[spot.y][spot.x].decoration = newDecoration;
-
-        this.render();
-        return newDecoration;
-    }
-
-    createBuilding(x, y) {
-        // Pick random building style
-        const baseIndex = Math.floor(Math.random() * ASSETS.buildings.bases.length);
-        const floorIndex = Math.floor(Math.random() * ASSETS.buildings.floors.length);
-        const roofIndex = Math.floor(Math.random() * ASSETS.buildings.roofs.length);
-
-        const building = {
-            x,
-            y,
-            floors: 1,
-            maxFloors: 3 + Math.floor(Math.random() * 3), // 3-5 floors max
-            baseAsset: `base_${ASSETS.buildings.bases[baseIndex].id}`,
-            floorAsset: `floor_${ASSETS.buildings.floors[floorIndex].id}`,
-            roofAsset: `roof_${ASSETS.buildings.roofs[roofIndex].id}`,
-        };
-
-        this.buildings.push(building);
-        this.grid[y][x].type = 'building';
-        this.grid[y][x].occupied = true;
-        this.grid[y][x].building = building;
-
-        return building;
-    }
-
-    render() {
-        if (!assetLoader.loaded) return;
-
-        const ctx = this.ctx;
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // Draw in isometric order (back to front)
-        for (let y = 0; y < this.gridSize; y++) {
-            for (let x = 0; x < this.gridSize; x++) {
-                this.renderCell(x, y);
-            }
-        }
-    }
-
-    renderCell(gridX, gridY) {
-        const ctx = this.ctx;
-        const cell = this.grid[gridY][gridX];
-        const pos = this.gridToScreen(gridX, gridY);
-
-        // Draw ground tile
-        let groundImg;
-        switch (cell.type) {
-            case 'road':
-                groundImg = assetLoader.get('ground_road_straight');
-                break;
-            case 'building':
-            case 'grass':
-            default:
-                groundImg = assetLoader.get('ground_grass');
-                break;
-        }
-
-        if (groundImg) {
-            ctx.drawImage(
-                groundImg,
-                pos.x - this.tileWidth / 2,
-                pos.y - this.tileHeight / 2,
-                this.tileWidth,
-                this.tileHeight + 20 // Account for tile depth
-            );
-        }
-
-        // Draw building if present
-        if (cell.building) {
-            this.renderBuilding(cell.building, pos);
-        }
-
-        // Draw decoration if present
-        if (cell.decoration) {
-            this.renderDecoration(cell.decoration, pos);
-        }
-    }
-
-    renderBuilding(building, pos) {
-        const ctx = this.ctx;
-
-        // Draw base
-        const baseImg = assetLoader.get(building.baseAsset);
-        if (baseImg) {
-            ctx.drawImage(
-                baseImg,
-                pos.x - this.tileWidth / 2,
-                pos.y - this.tileHeight / 2 - 30,
-                this.tileWidth,
-                baseImg.height * (this.tileWidth / baseImg.width)
-            );
-        }
-
-        // Draw floors
-        const floorImg = assetLoader.get(building.floorAsset);
-        if (floorImg && building.floors > 1) {
-            for (let i = 1; i < building.floors; i++) {
-                ctx.drawImage(
-                    floorImg,
-                    pos.x - this.tileWidth / 2,
-                    pos.y - this.tileHeight / 2 - 30 - (i * this.floorHeight),
-                    this.tileWidth,
-                    floorImg.height * (this.tileWidth / floorImg.width)
-                );
-            }
-        }
-
-        // Draw roof
-        const roofImg = assetLoader.get(building.roofAsset);
-        if (roofImg) {
-            const roofY = pos.y - this.tileHeight / 2 - 30 - (building.floors * this.floorHeight) + 10;
-            ctx.drawImage(
-                roofImg,
-                pos.x - this.tileWidth / 2,
-                roofY,
-                this.tileWidth,
-                roofImg.height * (this.tileWidth / roofImg.width)
-            );
-        }
-    }
-
-    renderDecoration(decoration, pos) {
-        const ctx = this.ctx;
-        const img = assetLoader.get(decoration.assetKey);
-
-        if (img) {
-            // Center decoration on tile
-            const scale = 0.8;
-            const width = img.width * scale;
-            const height = img.height * scale;
-
-            ctx.drawImage(
-                img,
-                pos.x - width / 2,
-                pos.y - height + 10,
-                width,
-                height
-            );
-        }
-    }
-
-    // Get stats for display
     getStats() {
-        const totalFloors = this.buildings.reduce((sum, b) => sum + b.floors, 0);
-        return {
-            buildings: this.buildings.length,
-            floors: totalFloors,
-            decorations: this.decorations.length,
-        };
-    }
+        let buildings = 0;
+        let roads = 0;
 
-    // Save city state to localStorage
-    save() {
-        const state = {
-            buildings: this.buildings,
-            decorations: this.decorations,
-            grid: this.grid,
-        };
-        localStorage.setItem('tinyHabitsCity', JSON.stringify(state));
-    }
-
-    // Load city state from localStorage
-    load() {
-        const saved = localStorage.getItem('tinyHabitsCity');
-        if (saved) {
-            try {
-                const state = JSON.parse(saved);
-                this.buildings = state.buildings || [];
-                this.decorations = state.decorations || [];
-                this.grid = state.grid || this.grid;
-                return true;
-            } catch (e) {
-                console.warn('Failed to load city state:', e);
-            }
+        for (const [, tile] of this.grid) {
+            if (tile.type === 'building') buildings++;
+            else if (tile.type === 'road') roads++;
         }
-        return false;
+
+        return { buildings, tiles: this.grid.size };
+    }
+
+    save() {
+        const data = [];
+        for (const [, tile] of this.grid) {
+            data.push({
+                x: tile.x,
+                y: tile.y,
+                type: tile.type,
+                modelId: tile.modelId,
+            });
+        }
+        localStorage.setItem('tinyHabitsCity', JSON.stringify(data));
+    }
+
+    async load() {
+        const saved = localStorage.getItem('tinyHabitsCity');
+        if (!saved) return false;
+
+        try {
+            const data = JSON.parse(saved);
+
+            // First pass: place roads (they need to update each other)
+            for (const tile of data) {
+                if (tile.type === 'road') {
+                    await this.placeRoad(tile.x, tile.y);
+                }
+            }
+
+            // Second pass: place buildings
+            for (const tile of data) {
+                if (tile.type === 'building') {
+                    await this.placeBuilding(tile.x, tile.y, tile.modelId);
+                }
+            }
+
+            return true;
+        } catch (e) {
+            console.warn('Failed to load city:', e);
+            return false;
+        }
+    }
+
+    onResize() {
+        const width = this.container.clientWidth;
+        const height = this.container.clientHeight;
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        const delta = this.clock.getDelta();
+        for (const mixer of this.mixers) {
+            mixer.update(delta);
+        }
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
     }
 }
+
+window.City = City;
