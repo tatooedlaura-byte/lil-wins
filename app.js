@@ -1,6 +1,6 @@
 /**
- * Main application for Tiny Habits City
- * Handles habit management and ties habits to city growth
+ * Main application for Lil' Wins
+ * Handles wins/tasks and ties them to world growth
  */
 
 let kingdom;
@@ -20,12 +20,12 @@ const DUNGEON_UNLOCK_TILES = 150; // Tiles needed to unlock dungeon
 const MESSAGES = {
     newFloor: [
         "Great job! Your building just added a new floor!",
-        "Your habit power is rising! Another floor has appeared.",
+        "Your win power is rising! Another floor has appeared.",
         "Boop! Your building grew taller.",
         "Look at you go—your tower just leveled up!",
         "A fresh new floor popped into existence—nicely done!",
         "Your city noticed your progress and decided to grow.",
-        "Wow! Your habit fueled a construction boom!",
+        "Wow! Your win fueled a construction boom!",
         "Floor added! Your tiny citizens are very impressed.",
         "Your building is stretching its legs—thanks to you!",
         "Another floor! At this rate you'll reach the clouds.",
@@ -33,12 +33,12 @@ const MESSAGES = {
     newBuilding: [
         "A cozy little building appeared to celebrate your progress!",
         "Someone new moved into your tiny town—welcome home!",
-        "A fresh building sprouted up. Your habits are magical.",
+        "A fresh building sprouted up. Your wins are magical.",
         "Your city loves your consistency—here's a new building!",
         "A tiny family just unpacked because of YOU.",
         "Your city built something brand-new—no permits required!",
         "A cheerful new spot just appeared in town!",
-        "Your habit sparked construction—new building unlocked!",
+        "Your win sparked construction—new building unlocked!",
         "Tiny architects thank you for your hard work.",
     ],
     decoration: [
@@ -46,18 +46,18 @@ const MESSAGES = {
         "Your progress planted something beautiful.",
         "Trees whisper thank you—new greenery unlocked!",
         "A fresh patch of sunshine appeared in your town.",
-        "Your habit created a quiet little spot for tiny picnics.",
+        "Your win created a quiet little spot for tiny picnics.",
         "A little something extra appeared in your city!",
         "Your town got a bit cozier.",
     ],
-    firstHabit: [
-        "First habit of the day! The city's waking up with you.",
+    firstWin: [
+        "First win of the day! The city's waking up with you.",
         "Good morning! Your city is buzzing with you.",
         "You're lighting up the skyline today!",
         "The day begins—and so does your progress!",
     ],
     general: [
-        "Tiny habits, big magic.",
+        "Lil' wins, big magic.",
         "You did something good today. Your city noticed.",
         "Every step counts—and look how your city grows.",
         "Your town believes in you.",
@@ -70,7 +70,7 @@ const MESSAGES = {
         "Your progress feels like tea and sunshine.",
         "The tiny citizens lit a candle in your honor.",
         "A soft breeze of progress passed through your city.",
-        "A sparkle of habit magic just hit your map!",
+        "A sparkle of win magic just hit your map!",
         "Poof! Something wonderful appeared.",
         "Your city hummed happily at your accomplishment.",
         "Tiny architects danced with joy!",
@@ -81,12 +81,12 @@ const MESSAGES = {
         "A new day = a chance for one tiny win. Your city believes in you.",
         "Sunrise in your cozy town—want to build something small today?",
         "Your tiny citizens are sipping tea, wondering what you'll do next.",
-        "Morning breeze says: one tiny habit is enough.",
+        "Morning breeze says: one lil' win is enough.",
         "A sparkle floated across your town this morning.",
         "The tiny architect cat left a note: 'Do your best!'",
     ],
     midday: [
-        "Hey! Even one 10-second habit can grow your little city.",
+        "Hey! Even one 10-second win can grow your little city.",
         "Your town is humming quietly. Want to add something small?",
         "A tiny burst of progress could add a floor or two…",
         "Your city is proud of you—no matter how today is going.",
@@ -99,7 +99,7 @@ const MESSAGES = {
         "The tiny city lights are glowing… did you want to add anything today?",
         "If today was a lot, that's okay. Your city is always here for you.",
         "A tiny win before bedtime? Even brushing your teeth counts.",
-        "Your cozy town is winding down—maybe one more gentle habit?",
+        "Your cozy town is winding down—maybe one more lil' win?",
         "You did enough today. Truly.",
         "Your skyline is dreaming of growing.",
         "A gentle magic drifts over your buildings today.",
@@ -109,7 +109,7 @@ const MESSAGES = {
         "You're doing the best you can. A tiny step is still a step.",
         "Small wins build tall cities… and calmer days.",
         "Progress doesn't need to be loud to matter.",
-        "You matter. Your habits matter. Your city loves you.",
+        "You matter. Your wins matter. Your city loves you.",
         "You don't have to do much. One tiny thing is enough.",
         "If today is heavy, no worries—your city will wait.",
         "Your worth is not tied to your productivity.",
@@ -118,7 +118,7 @@ const MESSAGES = {
     ],
     celebration: [
         "Your city loved what you did today. Really loved it.",
-        "Habit complete! A tiny celebration is happening downtown.",
+        "Win complete! A tiny celebration is happening downtown.",
         "You did something good today. Your city noticed.",
         "A quiet cheer rises from your cozy city streets.",
         "Your progress today was a warm little spark.",
@@ -132,14 +132,14 @@ const MESSAGES = {
         "The city planners sketched something cute today…",
     ],
     allDone: [
-        "You did it! Every single habit, done. Your city is glowing.",
-        "All habits complete! The whole town is celebrating you.",
+        "You did it! Every single win, done. Your city is glowing.",
+        "All wins complete! The whole town is celebrating you.",
         "100% today! Fireworks are going off in your tiny city.",
         "You finished everything! A parade is marching through downtown.",
         "All done! Your city has never been prouder.",
-        "Every habit checked off. You absolute legend.",
+        "Every win checked off. You absolute legend.",
         "Complete sweep! Your tiny citizens are throwing confetti.",
-        "All habits done! The mayor just declared a holiday in your honor.",
+        "All wins done! The mayor just declared a holiday in your honor.",
         "You crushed it! The city bells are ringing for you.",
         "Perfect day! A golden star appeared over your city.",
     ],
@@ -210,6 +210,28 @@ const PRESET_HABITS = [
     { name: 'Start the coffee maker', category: 'morning' },
     { name: 'Feed pets', category: 'morning' },
     { name: 'Pack one item in your bag', category: 'morning' },
+    { name: 'Put on deodorant', category: 'morning' },
+    { name: 'Check the weather', category: 'morning' },
+    { name: 'Put away pajamas', category: 'morning' },
+    { name: 'Splash cold water on face', category: 'morning' },
+    { name: 'Say good morning to someone', category: 'morning' },
+
+    // Evening / Night
+    { name: 'Brush teeth before bed', category: 'evening' },
+    { name: 'Wash face before bed', category: 'evening' },
+    { name: 'Set out clothes for tomorrow', category: 'evening' },
+    { name: 'Charge your phone', category: 'evening' },
+    { name: 'Take evening meds', category: 'evening' },
+    { name: 'Write one thing that went well today', category: 'evening' },
+    { name: 'Set an alarm', category: 'evening' },
+    { name: 'Lock the doors', category: 'evening' },
+    { name: 'Turn off lights', category: 'evening' },
+    { name: 'Put phone on silent', category: 'evening' },
+    { name: 'Read one page before sleep', category: 'evening' },
+    { name: 'Do a 1-minute wind down', category: 'evening' },
+    { name: 'Check tomorrow\'s calendar', category: 'evening' },
+    { name: 'Say goodnight to someone', category: 'evening' },
+    { name: 'Close all apps', category: 'evening' },
 
     // Wellness
     { name: 'Drink a cup of water', category: 'wellness' },
@@ -224,6 +246,32 @@ const PRESET_HABITS = [
     { name: 'Touch your toes', category: 'wellness' },
     { name: 'Put on lotion', category: 'wellness' },
     { name: 'Choose a healthy snack', category: 'wellness' },
+    { name: 'Stand up and stretch', category: 'wellness' },
+    { name: 'Roll your shoulders', category: 'wellness' },
+    { name: 'Massage your hands', category: 'wellness' },
+    { name: 'Take 3 slow breaths', category: 'wellness' },
+    { name: 'Drink herbal tea', category: 'wellness' },
+    { name: 'Eat a piece of fruit', category: 'wellness' },
+    { name: 'Step away from screens for 5 min', category: 'wellness' },
+    { name: 'Do 5 jumping jacks', category: 'wellness' },
+    { name: 'Neck stretches', category: 'wellness' },
+
+    // Exercise / Movement
+    { name: 'Do 1 push-up', category: 'exercise' },
+    { name: 'Do 1 squat', category: 'exercise' },
+    { name: 'Do 1 sit-up', category: 'exercise' },
+    { name: 'Hold a plank for 10 seconds', category: 'exercise' },
+    { name: 'Walk around the block', category: 'exercise' },
+    { name: 'Dance to one song', category: 'exercise' },
+    { name: 'Do 10 arm circles', category: 'exercise' },
+    { name: 'Walk up one flight of stairs', category: 'exercise' },
+    { name: 'Jog in place for 30 seconds', category: 'exercise' },
+    { name: 'Do a yoga pose', category: 'exercise' },
+    { name: 'Stretch for 2 minutes', category: 'exercise' },
+    { name: 'Take a standing break', category: 'exercise' },
+    { name: 'Do calf raises', category: 'exercise' },
+    { name: 'Do lunges across the room', category: 'exercise' },
+    { name: 'Shadow box for 30 seconds', category: 'exercise' },
 
     // Home
     { name: 'Put one dish in the sink', category: 'home' },
@@ -238,6 +286,17 @@ const PRESET_HABITS = [
     { name: 'Pick up 5 things', category: 'home' },
     { name: 'Light a candle', category: 'home' },
     { name: 'Open a window for fresh air', category: 'home' },
+    { name: 'Vacuum one room', category: 'home' },
+    { name: 'Take out one bag of trash', category: 'home' },
+    { name: 'Sort one pile of mail', category: 'home' },
+    { name: 'Clean one mirror', category: 'home' },
+    { name: 'Dust one shelf', category: 'home' },
+    { name: 'Organize one drawer', category: 'home' },
+    { name: 'Replace one empty roll', category: 'home' },
+    { name: 'Fluff pillows', category: 'home' },
+    { name: 'Straighten shoes by the door', category: 'home' },
+    { name: 'Wipe down light switches', category: 'home' },
+    { name: 'Clean the sink', category: 'home' },
 
     // Work / Productivity
     { name: 'Check the calendar', category: 'productivity' },
@@ -249,6 +308,15 @@ const PRESET_HABITS = [
     { name: 'Move one appointment if needed', category: 'productivity' },
     { name: 'Back up a file', category: 'productivity' },
     { name: 'Turn off one notification', category: 'productivity' },
+    { name: 'Review tomorrow\'s meetings', category: 'productivity' },
+    { name: 'File one document', category: 'productivity' },
+    { name: 'Update one password', category: 'productivity' },
+    { name: 'Clear desktop clutter', category: 'productivity' },
+    { name: 'Write a quick note of thanks', category: 'productivity' },
+    { name: 'Set one timer for focus', category: 'productivity' },
+    { name: 'Prioritize top 3 tasks', category: 'productivity' },
+    { name: 'Archive old emails', category: 'productivity' },
+    { name: 'Review weekly goals', category: 'productivity' },
 
     // Family / Kids
     { name: 'Read one page of a book', category: 'family' },
@@ -259,6 +327,14 @@ const PRESET_HABITS = [
     { name: 'Feed pets together', category: 'family' },
     { name: 'Kindness moment (one small nice thing)', category: 'family' },
     { name: 'Share one fun fact', category: 'family' },
+    { name: 'Give someone a hug', category: 'family' },
+    { name: 'Play a quick game together', category: 'family' },
+    { name: 'Ask about their day', category: 'family' },
+    { name: 'Help with homework for 5 min', category: 'family' },
+    { name: 'Pack lunch together', category: 'family' },
+    { name: 'Check backpack', category: 'family' },
+    { name: 'Sign one form', category: 'family' },
+    { name: 'Have a snack together', category: 'family' },
 
     // Digital
     { name: 'Delete one unused photo', category: 'digital' },
@@ -268,27 +344,100 @@ const PRESET_HABITS = [
     { name: 'Unsubscribe from one email', category: 'digital' },
     { name: 'Save one photo to an album', category: 'digital' },
     { name: 'Back up today\'s photos', category: 'digital' },
+    { name: 'Delete one unused app', category: 'digital' },
+    { name: 'Clear notifications', category: 'digital' },
+    { name: 'Organize one folder', category: 'digital' },
+    { name: 'Update one app', category: 'digital' },
+    { name: 'Check screen time', category: 'digital' },
+    { name: 'Clean phone screen', category: 'digital' },
+    { name: 'Review subscriptions', category: 'digital' },
+    { name: 'Empty trash folder', category: 'digital' },
+    { name: 'Log out of unused accounts', category: 'digital' },
 
-    // Emotional
+    // Emotional / Mental Health
     { name: 'Say one positive thought', category: 'emotional' },
     { name: 'Write one gratitude word', category: 'emotional' },
     { name: 'Text someone "thinking of you"', category: 'emotional' },
     { name: 'Smile at yourself in a mirror', category: 'emotional' },
     { name: 'Sit or breathe for 10 seconds', category: 'emotional' },
-    { name: 'Give yourself permission to rest', category: 'emotional' },
-    { name: 'Celebrate one win (even tiny!)', category: 'emotional' },
+    { name: 'Name one emotion you\'re feeling', category: 'emotional' },
+    { name: 'Give yourself a compliment', category: 'emotional' },
+    { name: 'Forgive yourself for one thing', category: 'emotional' },
+    { name: 'Write down a worry to let it go', category: 'emotional' },
+    { name: 'Listen to a calming song', category: 'emotional' },
+    { name: 'Look at a happy photo', category: 'emotional' },
+    { name: 'Say "I am enough"', category: 'emotional' },
+    { name: 'Take a mindful moment', category: 'emotional' },
+    { name: 'Hug yourself', category: 'emotional' },
+    { name: 'Write one hope for today', category: 'emotional' },
 
-    // Evening
-    { name: 'Brush teeth (evening)', category: 'evening' },
-    { name: 'Put charger next to bed', category: 'evening' },
-    { name: 'Bring a glass of water to bedside', category: 'evening' },
-    { name: 'Pick tomorrow\'s shirt', category: 'evening' },
-    { name: 'Turn off one light', category: 'evening' },
-    { name: 'Set up coffee for morning', category: 'evening' },
-    { name: 'Put blanket back on couch', category: 'evening' },
-    { name: 'Wash one dish', category: 'evening' },
-    { name: 'Take evening meds', category: 'evening' },
-    { name: 'Journal one sentence', category: 'evening' },
+    // Social / Connection
+    { name: 'Text a friend', category: 'social' },
+    { name: 'Call someone for 2 minutes', category: 'social' },
+    { name: 'Send a meme to a friend', category: 'social' },
+    { name: 'Comment on a friend\'s post', category: 'social' },
+    { name: 'Say hi to a neighbor', category: 'social' },
+    { name: 'Thank someone', category: 'social' },
+    { name: 'Make plans with someone', category: 'social' },
+    { name: 'Share something you enjoyed', category: 'social' },
+    { name: 'Compliment a stranger', category: 'social' },
+    { name: 'Respond to one message', category: 'social' },
+    { name: 'Send a voice note', category: 'social' },
+    { name: 'Write a quick email to family', category: 'social' },
+
+    // Creative / Learning
+    { name: 'Doodle for 1 minute', category: 'creative' },
+    { name: 'Learn one new word', category: 'creative' },
+    { name: 'Read one article', category: 'creative' },
+    { name: 'Watch one tutorial', category: 'creative' },
+    { name: 'Write one sentence of a story', category: 'creative' },
+    { name: 'Take one photo', category: 'creative' },
+    { name: 'Listen to a podcast for 5 min', category: 'creative' },
+    { name: 'Practice an instrument for 2 min', category: 'creative' },
+    { name: 'Sketch something you see', category: 'creative' },
+    { name: 'Write a haiku', category: 'creative' },
+    { name: 'Try a new recipe step', category: 'creative' },
+    { name: 'Learn one phrase in another language', category: 'creative' },
+    { name: 'Color for 5 minutes', category: 'creative' },
+    { name: 'Do one puzzle', category: 'creative' },
+
+    // Finance / Adulting
+    { name: 'Check bank balance', category: 'finance' },
+    { name: 'Log one expense', category: 'finance' },
+    { name: 'Pay one bill', category: 'finance' },
+    { name: 'Review one subscription', category: 'finance' },
+    { name: 'Add to savings (any amount)', category: 'finance' },
+    { name: 'Check credit score', category: 'finance' },
+    { name: 'File one receipt', category: 'finance' },
+    { name: 'Update budget', category: 'finance' },
+    { name: 'Cancel unused subscription', category: 'finance' },
+    { name: 'Review auto-payments', category: 'finance' },
+
+    // Self-Care / Relaxation
+    { name: 'Take a bath or shower', category: 'selfcare' },
+    { name: 'Apply face mask', category: 'selfcare' },
+    { name: 'Paint nails', category: 'selfcare' },
+    { name: 'Use a heating pad', category: 'selfcare' },
+    { name: 'Lie down for 5 minutes', category: 'selfcare' },
+    { name: 'Listen to nature sounds', category: 'selfcare' },
+    { name: 'Drink something warm', category: 'selfcare' },
+    { name: 'Wrap up in a cozy blanket', category: 'selfcare' },
+    { name: 'Use hand cream', category: 'selfcare' },
+    { name: 'Brush or braid hair', category: 'selfcare' },
+    { name: 'Clip nails', category: 'selfcare' },
+    { name: 'Put on fresh socks', category: 'selfcare' },
+
+    // Outdoors / Nature
+    { name: 'Step outside for fresh air', category: 'outdoors' },
+    { name: 'Look at the sky', category: 'outdoors' },
+    { name: 'Touch a plant or tree', category: 'outdoors' },
+    { name: 'Listen to birds', category: 'outdoors' },
+    { name: 'Walk barefoot on grass', category: 'outdoors' },
+    { name: 'Sit in the sun for 2 minutes', category: 'outdoors' },
+    { name: 'Take a photo outside', category: 'outdoors' },
+    { name: 'Water outdoor plants', category: 'outdoors' },
+    { name: 'Watch a sunset or sunrise', category: 'outdoors' },
+    { name: 'Pick up one piece of litter', category: 'outdoors' },
 ];
 
 // DOM Elements
@@ -425,10 +574,10 @@ function updateWorldSelector() {
 
     // Update subtitle
     const subtitles = {
-        kingdom: 'Build your kingdom, one habit at a time',
-        city: 'Build your city, one habit at a time',
-        spacebase: 'Build your space colony, one habit at a time',
-        dungeon: 'Build your dungeon, one habit at a time'
+        kingdom: 'Build your kingdom, one win at a time',
+        city: 'Build your city, one win at a time',
+        spacebase: 'Build your space colony, one win at a time',
+        dungeon: 'Build your dungeon, one win at a time'
     };
     subtitle.textContent = subtitles[currentWorld] || subtitles.kingdom;
 }
@@ -474,7 +623,7 @@ async function switchWorld(worldName) {
         city = new City(container);
         await waitForLoad(city);
         await city.load();
-        showToast('Welcome to the City! Keep building your habits.');
+        showToast('Welcome to the City! Keep stacking those wins.');
     } else if (worldName === 'spacebase') {
         spacebase = new SpaceBase(container);
         await waitForLoad(spacebase);
@@ -567,7 +716,7 @@ async function toggleHabit(habitName) {
         if (allCompleted) {
             messageType = 'allDone';
         } else if (isFirstHabit) {
-            messageType = 'firstHabit';
+            messageType = 'firstWin';
         } else if (result) {
             messageType = 'decoration';
         }
@@ -602,13 +751,19 @@ function renderHabits() {
     const categoryNames = {
         custom: 'My Habits',
         morning: 'Morning',
+        evening: 'Evening',
         wellness: 'Wellness',
+        exercise: 'Exercise',
         home: 'Home',
         productivity: 'Work & Productivity',
         family: 'Family & Kids',
         digital: 'Digital',
-        emotional: 'Emotional',
-        evening: 'Evening'
+        emotional: 'Emotional & Mental Health',
+        social: 'Social & Connection',
+        creative: 'Creative & Learning',
+        finance: 'Finance & Adulting',
+        selfcare: 'Self-Care',
+        outdoors: 'Outdoors & Nature'
     };
 
     // Build categories with custom habits first
