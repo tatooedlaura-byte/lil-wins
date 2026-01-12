@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graveyard Designer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #eaeaea;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Asset Palette */
+        .palette {
+            width: 280px;
+            background: #16213e;
+            padding: 16px;
+            overflow-y: auto;
+            border-right: 1px solid #2a3a55;
+        }
+        .palette h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9b59b6;
+            margin-bottom: 12px;
+        }
+        .palette-section {
+            margin-bottom: 20px;
+        }
+        .palette-section h3 {
+            font-size: 12px;
+            color: #9b59b6;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .palette-section h3:hover {
+            color: #bb79d6;
+        }
+        .palette-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .palette-item {
+            width: 70px;
+            height: 80px;
+            background: #1f2940;
+            border: 1px solid #2a3a55;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 9px;
+            text-align: center;
+            transition: all 0.2s;
+            padding-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        .palette-item:hover {
+            background: #2a3a55;
+            border-color: #9b59b6;
+        }
+        .palette-item.dragging {
+            opacity: 0.5;
+        }
+        .palette-item .thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 70px;
+            height: 55px;
+            background: #0d0d1a;
+        }
+        .palette-item .thumbnail canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .palette-item .loading {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #a0a0a0;
+        }
+        .palette-item .code {
+            font-weight: bold;
+            color: #9b59b6;
+            position: relative;
+            z-index: 1;
+        }
+        .palette-item .name {
+            color: #a0a0a0;
+            font-size: 7px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 66px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Main Area */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            padding: 12px 20px;
+            background: #16213e;
+            border-bottom: 1px solid #2a3a55;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .toolbar button {
+            padding: 8px 16px;
+            background: #9b59b6;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .toolbar button:hover {
+            background: #bb79d6;
+        }
+        .toolbar button.secondary {
+            background: #2a3a55;
+        }
+        .toolbar button.secondary:hover {
+            background: #3a4a65;
+        }
+        .toolbar span {
+            color: #a0a0a0;
+            font-size: 13px;
+        }
+        .toolbar select {
+            background: #1f2940;
+            border: 1px solid #2a3a55;
+            border-radius: 4px;
+            color: #eaeaea;
+            padding: 4px 8px;
+        }
+
+        /* Grid Area */
+        .grid-container {
+            flex: 1;
+            overflow: auto;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .grid {
+            display: grid;
+            gap: 2px;
+            background: #0d0d1a;
+            padding: 2px;
+            border-radius: 8px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            background: #1f2940;
+            border: 1px dashed #2a3a55;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-align: center;
+            position: relative;
+        }
+        .cell.drag-over {
+            background: #3d2a55;
+            border-color: #9b59b6;
+        }
+        .cell.has-item {
+            background: #2a3a55;
+            border: 1px solid #9b59b6;
+            cursor: pointer;
+        }
+        .cell.has-item:hover {
+            background: #3a4a65;
+        }
+        .cell .item-code {
+            font-weight: bold;
+            color: #9b59b6;
+            font-size: 12px;
+        }
+        .cell .item-name {
+            color: #a0a0a0;
+            font-size: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 56px;
+        }
+        .cell .rotation {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 8px;
+            color: #ff9800;
+        }
+        .cell.selected {
+            border: 2px solid #ff9800;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            width: 350px;
+            background: #16213e;
+            border-left: 1px solid #2a3a55;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-panel h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9b59b6;
+            margin-bottom: 12px;
+        }
+        #preview-canvas {
+            flex: 1;
+            background: #0d0d1a;
+            border-radius: 8px;
+            min-height: 300px;
+        }
+        .output-section {
+            margin-top: 16px;
+        }
+        .output-section h3 {
+            font-size: 12px;
+            color: #ff9800;
+            margin-bottom: 8px;
+        }
+        #output {
+            background: #0d0d1a;
+            border: 1px solid #2a3a55;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #9b59b6;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Instructions */
+        .instructions {
+            padding: 8px 12px;
+            background: #1f2940;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #a0a0a0;
+            margin-bottom: 12px;
+        }
+        .instructions strong {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="palette">
+        <h2>Graveyard Assets</h2>
+        <input type="text" id="search" placeholder="Search assets..." style="width: 100%; padding: 8px; margin-bottom: 12px; background: #1f2940; border: 1px solid #2a3a55; border-radius: 4px; color: #eaeaea;">
+        <div id="palette-items"></div>
+    </div>
+
+    <div class="main">
+        <div class="toolbar">
+            <button onclick="clearGrid()">Clear Grid</button>
+            <button class="secondary" onclick="exportLayout()">Export Layout</button>
+            <button class="secondary" onclick="saveToLocalStorage()">Save to Game</button>
+            <span>Grid: <input type="number" id="grid-size" value="11" min="3" max="25" style="width: 50px; background: #1f2940; border: 1px solid #2a3a55; border-radius: 4px; color: #eaeaea; padding: 4px;">
+            <button class="secondary" onclick="resizeGrid()">Resize</button></span>
+            <span style="margin-left: auto;">Click item: <strong>R</strong>=rotate, <strong>X</strong>=delete</span>
+        </div>
+
+        <div class="grid-container">
+            <div class="grid" id="grid"></div>
+        </div>
+    </div>
+
+    <div class="preview-panel">
+        <h2>3D Preview</h2>
+        <div class="instructions">
+            <strong>Drag</strong> assets from left panel onto grid.<br>
+            <strong>Click</strong> placed item to select, then <strong>R</strong> to rotate, <strong>X/Delete</strong> to remove.
+        </div>
+        <canvas id="preview-canvas"></canvas>
+        <div class="output-section">
+            <h3>Graveyard Template Code</h3>
+            <div id="output">// Place items to generate code</div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // Graveyard-focused assets (Halloween + Spooktober)
+        const assets = [
+            // Floor Tiles
+            { code: 'FLD', name: 'floor_dirt', file: 'floor_dirt.gltf', category: 'Floors', path: 'halloween' },
+            { code: 'FLG', name: 'floor_grave', file: 'floor_dirt_grave.gltf', category: 'Floors', path: 'halloween' },
+            { code: 'PTH', name: 'path_A', file: 'path_A.gltf', category: 'Floors', path: 'halloween' },
+
+            // Graves & Tombstones
+            { code: 'GRV', name: 'grave_A', file: 'grave_A.gltf', category: 'Graves', path: 'halloween' },
+            { code: 'GRD', name: 'grave_destroyed', file: 'grave_A_destroyed.gltf', category: 'Graves', path: 'halloween' },
+            { code: 'GRB', name: 'grave_B', file: 'grave_B.gltf', category: 'Graves', path: 'halloween' },
+            { code: 'GST', name: 'gravestone', file: 'gravestone.gltf', category: 'Graves', path: 'halloween' },
+            { code: 'GMA', name: 'gravemarker_A', file: 'gravemarker_A.gltf', category: 'Graves', path: 'halloween' },
+            { code: 'GMB', name: 'gravemarker_B', file: 'gravemarker_B.gltf', category: 'Graves', path: 'halloween' },
+
+            // Structures
+            { code: 'CRP', name: 'crypt', file: 'crypt.gltf', category: 'Structures', path: 'halloween' },
+            { code: 'COF', name: 'coffin', file: 'coffin.gltf', category: 'Structures', path: 'halloween' },
+            { code: 'CFD', name: 'coffin_decorated', file: 'coffin_decorated.gltf', category: 'Structures', path: 'halloween' },
+            { code: 'SHR', name: 'shrine', file: 'shrine.gltf', category: 'Structures', path: 'halloween' },
+            { code: 'SRC', name: 'shrine_candles', file: 'shrine_candles.gltf', category: 'Structures', path: 'halloween' },
+            { code: 'ARC', name: 'arch', file: 'arch.gltf', category: 'Structures', path: 'halloween' },
+            { code: 'ARG', name: 'arch_gate', file: 'arch_gate.gltf', category: 'Structures', path: 'halloween' },
+
+            // Fences
+            { code: 'FNC', name: 'fence', file: 'fence.gltf', category: 'Fences', path: 'halloween' },
+            { code: 'FNG', name: 'fence_gate', file: 'fence_gate.gltf', category: 'Fences', path: 'halloween' },
+            { code: 'FNP', name: 'fence_pillar', file: 'fence_pillar.gltf', category: 'Fences', path: 'halloween' },
+            { code: 'FNB', name: 'fence_broken', file: 'fence_broken.gltf', category: 'Fences', path: 'halloween' },
+            { code: 'POS', name: 'post', file: 'post.gltf', category: 'Fences', path: 'halloween' },
+            { code: 'PLR', name: 'pillar', file: 'pillar.gltf', category: 'Fences', path: 'halloween' },
+
+            // Spooky Props
+            { code: 'SKL', name: 'skull', file: 'skull.gltf', category: 'Spooky', path: 'halloween' },
+            { code: 'SKC', name: 'skull_candle', file: 'skull_candle.gltf', category: 'Spooky', path: 'halloween' },
+            { code: 'BNA', name: 'bone_A', file: 'bone_A.gltf', category: 'Spooky', path: 'halloween' },
+            { code: 'BNB', name: 'bone_B', file: 'bone_B.gltf', category: 'Spooky', path: 'halloween' },
+            { code: 'BNC', name: 'bone_C', file: 'bone_C.gltf', category: 'Spooky', path: 'halloween' },
+            { code: 'PSK', name: 'post_skull', file: 'post_skull.gltf', category: 'Spooky', path: 'halloween' },
+            { code: 'CLD', name: 'cauldron', file: 'cauldron.gltf.glb', category: 'Spooky', path: 'spooktober' },
+
+            // Dead Trees
+            { code: 'TDS', name: 'tree_dead_small', file: 'tree_dead_small.gltf', category: 'Trees', path: 'halloween' },
+            { code: 'TDM', name: 'tree_dead_medium', file: 'tree_dead_medium.gltf', category: 'Trees', path: 'halloween' },
+            { code: 'TDL', name: 'tree_dead_large', file: 'tree_dead_large.gltf', category: 'Trees', path: 'halloween' },
+            { code: 'TDD', name: 'tree_dead_decorated', file: 'tree_dead_large_decorated.gltf', category: 'Trees', path: 'halloween' },
+            { code: 'TPO', name: 'tree_pine_orange', file: 'tree_pine_orange_large.gltf', category: 'Trees', path: 'halloween' },
+            { code: 'TPY', name: 'tree_pine_yellow', file: 'tree_pine_yellow_large.gltf', category: 'Trees', path: 'halloween' },
+
+            // Pumpkins
+            { code: 'PMP', name: 'pumpkin_orange', file: 'pumpkin_orange.gltf', category: 'Pumpkins', path: 'halloween' },
+            { code: 'PMY', name: 'pumpkin_yellow', file: 'pumpkin_yellow.gltf', category: 'Pumpkins', path: 'halloween' },
+            { code: 'JKL', name: 'jackolantern', file: 'pumpkin_orange_jackolantern.gltf', category: 'Pumpkins', path: 'halloween' },
+            { code: 'PMS', name: 'pumpkin_small', file: 'pumpkin_orange_small.gltf', category: 'Pumpkins', path: 'halloween' },
+            { code: 'JKB', name: 'jacko_big', file: 'jackolantern_big.gltf.glb', category: 'Pumpkins', path: 'spooktober' },
+            { code: 'JKS', name: 'jacko_small', file: 'jackolantern_small.gltf.glb', category: 'Pumpkins', path: 'spooktober' },
+
+            // Lighting
+            { code: 'LNT', name: 'lantern', file: 'lantern_standing.gltf', category: 'Lighting', path: 'halloween' },
+            { code: 'PSL', name: 'post_lantern', file: 'post_lantern.gltf', category: 'Lighting', path: 'halloween' },
+            { code: 'CNT', name: 'candle_triple', file: 'candle_triple.gltf', category: 'Lighting', path: 'dungeon' },
+            { code: 'CNL', name: 'candle_lit', file: 'candle_lit.gltf', category: 'Lighting', path: 'dungeon' },
+            { code: 'SCL', name: 'candle_large', file: 'candleLarge.gltf.glb', category: 'Lighting', path: 'spooktober' },
+            { code: 'SCB', name: 'candle_bundle', file: 'candleBundle.gltf.glb', category: 'Lighting', path: 'spooktober' },
+            { code: 'LMP', name: 'lamp_post', file: 'lampPost.gltf.glb', category: 'Lighting', path: 'spooktober' },
+
+            // Decor
+            { code: 'BEN', name: 'bench', file: 'bench.gltf', category: 'Decor', path: 'halloween' },
+            { code: 'BND', name: 'bench_decorated', file: 'bench_decorated.gltf', category: 'Decor', path: 'halloween' },
+            { code: 'GVS', name: 'gravestone_sp', file: 'gravestone.gltf.glb', category: 'Decor', path: 'spooktober' },
+            { code: 'SHN', name: 'shrine_sp', file: 'shrine.gltf.glb', category: 'Decor', path: 'spooktober' },
+
+            // Spooktober Tiles
+            { code: 'SGT', name: 'tile_graveyard', file: 'tileLarge_graveyard.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'SGS', name: 'tile_small', file: 'tileSmall_graveyard.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'SGL', name: 'tile_low', file: 'tileLow_graveyard.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'DTL', name: 'detail', file: 'detail_graveyard.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+
+            // Spooktober Trees
+            { code: 'STA', name: 'tree_A', file: 'treeA_graveyard.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'STB', name: 'tree_B', file: 'treeB_graveyard.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'STC', name: 'tree_C', file: 'treeC_graveyard.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+
+            // Spooktober Fences
+            { code: 'SFN', name: 'fence_sp', file: 'fence.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'SFC', name: 'fence_corner', file: 'fenceCorner.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'SFP', name: 'fence_post', file: 'fencePost.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+
+            // Coffins (Spooktober)
+            { code: 'CFA', name: 'coffin_A', file: 'coffinA_top.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+            { code: 'CFB', name: 'coffin_B', file: 'coffinB_top.gltf.glb', category: 'Spooktober', path: 'spooktober' },
+
+            // Candy (fun!)
+            { code: 'CNA', name: 'candy_A', file: 'candyA.gltf.glb', category: 'Candy', path: 'spooktober' },
+            { code: 'CNB', name: 'candy_B', file: 'candyB.gltf.glb', category: 'Candy', path: 'spooktober' },
+            { code: 'CCN', name: 'candy_corn', file: 'candyCorn.gltf.glb', category: 'Candy', path: 'spooktober' },
+            { code: 'CBG', name: 'candy_bag', file: 'candyBag.gltf.glb', category: 'Candy', path: 'spooktober' },
+            { code: 'CBK', name: 'candy_bucket', file: 'candyBucket.gltf.glb', category: 'Candy', path: 'spooktober' },
+            { code: 'LLA', name: 'lollipop_A', file: 'lollipopA.gltf.glb', category: 'Candy', path: 'spooktober' },
+            { code: 'LLB', name: 'lollipop_B', file: 'lollipopB.gltf.glb', category: 'Candy', path: 'spooktober' },
+        ];
+
+        let gridSize = 11;
+        let gridData = [];
+        let selectedCell = null;
+        let draggedAsset = null;
+
+        // Three.js setup
+        let scene, camera, renderer, controls;
+        const loader = new GLTFLoader();
+        const loadedModels = new Map();
+
+        function initThree() {
+            const canvas = document.getElementById('preview-canvas');
+            const rect = canvas.getBoundingClientRect();
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e); // Dark spooky background
+            scene.fog = new THREE.Fog(0x1a1a2e, 15, 50);
+
+            camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 1000);
+            camera.position.set(20, 20, 20);
+
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(rect.width, rect.height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Spooky lighting
+            const ambient = new THREE.AmbientLight(0x6666aa, 0.3);
+            scene.add(ambient);
+
+            // Moonlight
+            const moon = new THREE.DirectionalLight(0xaaaaff, 0.4);
+            moon.position.set(-10, 20, 10);
+            scene.add(moon);
+
+            // Orange accent light (pumpkins)
+            const pumpkinLight = new THREE.PointLight(0xff6600, 0.4, 30);
+            pumpkinLight.position.set(0, 3, 0);
+            scene.add(pumpkinLight);
+
+            // Ground plane - dark dirt
+            const tileSize = 2;
+            const groundSize = gridSize * tileSize;
+            const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.01;
+            scene.add(ground);
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function buildPalette() {
+            const container = document.getElementById('palette-items');
+            const categories = {};
+
+            assets.forEach(asset => {
+                if (!categories[asset.category]) {
+                    categories[asset.category] = [];
+                }
+                categories[asset.category].push(asset);
+            });
+
+            for (const [category, items] of Object.entries(categories)) {
+                const section = document.createElement('div');
+                section.className = 'palette-section';
+                section.innerHTML = `<h3>${category} (${items.length})</h3>`;
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'palette-items';
+
+                items.forEach(asset => {
+                    const item = document.createElement('div');
+                    item.className = 'palette-item';
+                    item.draggable = true;
+                    item.dataset.code = asset.code;
+                    item.dataset.name = asset.name;
+                    item.dataset.file = asset.file;
+                    item.innerHTML = `
+                        <div class="thumbnail" data-file="${asset.file}" data-path="${asset.path}">
+                            <span class="loading">...</span>
+                        </div>
+                        <span class="code">${asset.code}</span>
+                        <span class="name">${asset.name}</span>
+                    `;
+
+                    item.addEventListener('dragstart', (e) => {
+                        draggedAsset = asset;
+                        item.classList.add('dragging');
+                    });
+                    item.addEventListener('dragend', () => {
+                        item.classList.remove('dragging');
+                    });
+
+                    itemsDiv.appendChild(item);
+                });
+
+                section.appendChild(itemsDiv);
+                container.appendChild(section);
+            }
+        }
+
+        function buildGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 60px)`;
+            gridData = [];
+
+            for (let y = 0; y < gridSize; y++) {
+                const row = [];
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+
+                    cell.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        cell.classList.add('drag-over');
+                    });
+                    cell.addEventListener('dragleave', () => {
+                        cell.classList.remove('drag-over');
+                    });
+                    cell.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        cell.classList.remove('drag-over');
+                        if (draggedAsset) {
+                            placeItem(x, y, draggedAsset);
+                        }
+                    });
+                    cell.addEventListener('click', () => {
+                        selectCell(x, y, cell);
+                    });
+
+                    grid.appendChild(cell);
+                    row.push({ x, y, item: null, rotation: 0 });
+                }
+                gridData.push(row);
+            }
+        }
+
+        function placeItem(x, y, asset) {
+            gridData[y][x].item = asset;
+            gridData[y][x].rotation = 0;
+            updateCellDisplay(x, y);
+            updatePreview();
+            updateOutput();
+        }
+
+        function updateCellDisplay(x, y) {
+            const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+            const data = gridData[y][x];
+
+            if (data.item) {
+                cell.classList.add('has-item');
+                cell.innerHTML = `
+                    <span class="item-code">${data.item.code}</span>
+                    <span class="item-name">${data.item.name}</span>
+                    ${data.rotation > 0 ? `<span class="rotation">${data.rotation}°</span>` : ''}
+                `;
+            } else {
+                cell.classList.remove('has-item');
+                cell.innerHTML = '';
+            }
+        }
+
+        function selectCell(x, y, cell) {
+            document.querySelectorAll('.cell.selected').forEach(c => c.classList.remove('selected'));
+
+            if (gridData[y][x].item) {
+                cell.classList.add('selected');
+                selectedCell = { x, y };
+            } else {
+                selectedCell = null;
+            }
+        }
+
+        async function updatePreview() {
+            const toRemove = [];
+            scene.traverse(obj => {
+                if (obj.userData.isPlacedItem) {
+                    toRemove.push(obj);
+                }
+            });
+            toRemove.forEach(obj => scene.remove(obj));
+
+            const tileSize = 2;
+            const halfGrid = Math.floor(gridSize / 2);
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const data = gridData[y][x];
+                    if (data.item) {
+                        try {
+                            const model = await loadModel(data.item.file, data.item.path);
+                            if (model) {
+                                const clone = model.clone();
+                                clone.position.set(
+                                    (x - halfGrid) * tileSize,
+                                    0,
+                                    (y - halfGrid) * tileSize
+                                );
+                                clone.rotation.y = (data.rotation * Math.PI) / 180;
+                                clone.userData.isPlacedItem = true;
+                                scene.add(clone);
+                            }
+                        } catch (e) {
+                            console.log('Could not load:', data.item.file);
+                        }
+                    }
+                }
+            }
+        }
+
+        async function loadModel(filename, assetPath) {
+            const cacheKey = `${assetPath}/${filename}`;
+            if (loadedModels.has(cacheKey)) {
+                return loadedModels.get(cacheKey);
+            }
+
+            let basePath;
+            if (assetPath === 'dungeon') {
+                basePath = 'assets/dungeon';
+            } else {
+                basePath = `assets/kaykit/${assetPath}`;
+            }
+
+            return new Promise((resolve) => {
+                loader.load(
+                    `${basePath}/${filename}`,
+                    (gltf) => {
+                        const model = gltf.scene;
+                        model.scale.setScalar(1);
+                        loadedModels.set(cacheKey, model);
+                        resolve(model);
+                    },
+                    undefined,
+                    () => {
+                        loadedModels.set(cacheKey, null);
+                        resolve(null);
+                    }
+                );
+            });
+        }
+
+        function updateOutput() {
+            const items = [];
+            const halfGrid = Math.floor(gridSize / 2);
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const data = gridData[y][x];
+                    if (data.item) {
+                        // Convert to axial coordinates (q, r) for hex grid
+                        const q = x - halfGrid;
+                        const r = y - halfGrid;
+                        items.push({
+                            q,
+                            r,
+                            tile: 'floor_dirt',
+                            building: data.item.name,
+                            rotation: data.rotation
+                        });
+                    }
+                }
+            }
+
+            const output = document.getElementById('output');
+            if (items.length === 0) {
+                output.textContent = '// Place items to generate code';
+            } else {
+                output.textContent = `const graveyardTemplate = ${JSON.stringify(items, null, 2)};`;
+            }
+        }
+
+        window.clearGrid = function() {
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    gridData[y][x].item = null;
+                    gridData[y][x].rotation = 0;
+                    updateCellDisplay(x, y);
+                }
+            }
+            updatePreview();
+            updateOutput();
+        };
+
+        window.exportLayout = function() {
+            const output = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(output).then(() => {
+                alert('Layout code copied to clipboard!');
+            });
+        };
+
+        window.saveToLocalStorage = function() {
+            const items = [];
+            const halfGrid = Math.floor(gridSize / 2);
+
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const data = gridData[y][x];
+                    if (data.item) {
+                        const q = x - halfGrid;
+                        const r = y - halfGrid;
+                        items.push({
+                            q,
+                            r,
+                            tile: 'floor_dirt',
+                            building: data.item.name,
+                            rotation: data.rotation
+                        });
+                    }
+                }
+            }
+
+            if (items.length === 0) {
+                alert('No items to save!');
+                return;
+            }
+
+            localStorage.setItem('tinyHabitsGraveyard', JSON.stringify(items));
+            alert('Graveyard layout saved! Refresh the main app to see it.');
+        };
+
+        window.resizeGrid = function() {
+            gridSize = parseInt(document.getElementById('grid-size').value) || 11;
+            gridSize = Math.max(3, Math.min(25, gridSize));
+            buildGrid();
+            updatePreview();
+            updateOutput();
+        };
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!selectedCell) return;
+            const { x, y } = selectedCell;
+
+            if (e.key === 'r' || e.key === 'R') {
+                if (gridData[y][x].item) {
+                    gridData[y][x].rotation = (gridData[y][x].rotation + 60) % 360; // 60 degrees for hex
+                    updateCellDisplay(x, y);
+                    updatePreview();
+                    updateOutput();
+                }
+            } else if (e.key === 'x' || e.key === 'X' || e.key === 'Delete' || e.key === 'Backspace') {
+                gridData[y][x].item = null;
+                gridData[y][x].rotation = 0;
+                updateCellDisplay(x, y);
+                selectedCell = null;
+                updatePreview();
+                updateOutput();
+            }
+        });
+
+        // Search
+        document.getElementById('search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.palette-item').forEach(item => {
+                const code = item.dataset.code.toLowerCase();
+                const name = item.dataset.name.toLowerCase();
+                item.style.display = (code.includes(term) || name.includes(term)) ? '' : 'none';
+            });
+        });
+
+        // Thumbnail rendering
+        const thumbnailCache = new Map();
+
+        async function renderThumbnails() {
+            const thumbnails = document.querySelectorAll('.thumbnail[data-file]');
+
+            const thumbRenderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true,
+                preserveDrawingBuffer: true
+            });
+            thumbRenderer.setSize(140, 110);
+            thumbRenderer.setPixelRatio(1);
+
+            const thumbScene = new THREE.Scene();
+            thumbScene.background = new THREE.Color(0x0d0d1a);
+
+            const thumbCamera = new THREE.PerspectiveCamera(40, 140/110, 0.1, 100);
+
+            const thumbAmbient = new THREE.AmbientLight(0xffffff, 0.7);
+            thumbScene.add(thumbAmbient);
+            const thumbDir = new THREE.DirectionalLight(0xffffff, 0.8);
+            thumbDir.position.set(3, 5, 4);
+            thumbScene.add(thumbDir);
+
+            for (const thumb of thumbnails) {
+                const file = thumb.dataset.file;
+                const assetPath = thumb.dataset.path;
+                const cacheKey = `${assetPath}/${file}`;
+
+                if (thumbnailCache.has(cacheKey)) {
+                    thumb.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = thumbnailCache.get(cacheKey);
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'contain';
+                    thumb.appendChild(img);
+                    continue;
+                }
+
+                try {
+                    const model = await loadModel(file, assetPath);
+                    if (model) {
+                        const toRemove = [];
+                        thumbScene.traverse(obj => {
+                            if (obj.userData.isThumbModel) toRemove.push(obj);
+                        });
+                        toRemove.forEach(obj => thumbScene.remove(obj));
+
+                        const clone = model.clone();
+                        clone.userData.isThumbModel = true;
+
+                        const box = new THREE.Box3().setFromObject(clone);
+                        const center = box.getCenter(new THREE.Vector3());
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+
+                        clone.position.sub(center);
+
+                        const distance = maxDim * 2.2;
+                        thumbCamera.position.set(distance * 0.7, distance * 0.5, distance * 0.7);
+                        thumbCamera.lookAt(0, 0, 0);
+
+                        thumbScene.add(clone);
+
+                        thumbRenderer.render(thumbScene, thumbCamera);
+
+                        const dataUrl = thumbRenderer.domElement.toDataURL('image/png');
+                        thumbnailCache.set(cacheKey, dataUrl);
+
+                        thumb.innerHTML = '';
+                        const img = document.createElement('img');
+                        img.src = dataUrl;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'contain';
+                        thumb.appendChild(img);
+
+                        thumbScene.remove(clone);
+                    } else {
+                        thumb.innerHTML = '<span class="loading">N/A</span>';
+                    }
+                } catch (e) {
+                    thumb.innerHTML = '<span class="loading">ERR</span>';
+                }
+            }
+
+            thumbRenderer.dispose();
+        }
+
+        // Initialize
+        buildPalette();
+        buildGrid();
+        initThree();
+
+        setTimeout(renderThumbnails, 500);
+    </script>
+</body>
+</html>

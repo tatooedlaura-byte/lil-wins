@@ -4,7 +4,7 @@
  */
 
 // World instances
-let kingdom, city, spacebase, dungeon;
+let kingdom, city, spacebase, dungeon, graveyard;
 let currentWorld = 'kingdom';
 
 // User data
@@ -24,7 +24,8 @@ let daysActive = 0;
 const UNLOCK_REQUIREMENTS = {
     city: { type: 'streak', value: 3, message: 'Complete a 3-day streak to unlock the City!' },
     spacebase: { type: 'streak', value: 7, message: 'Complete a 7-day streak to unlock Space Base!' },
-    dungeon: { type: 'streak', value: 14, message: 'Complete a 14-day streak to unlock the Dungeon!' }
+    dungeon: { type: 'streak', value: 14, message: 'Complete a 14-day streak to unlock the Dungeon!' },
+    graveyard: { type: 'streak', value: 21, message: 'Complete a 21-day streak to unlock the Graveyard!' }
 };
 
 // Curated preset habits (reduced from 150+ to manageable categories)
@@ -115,7 +116,7 @@ async function initializeApp() {
     // Wait for world classes
     await new Promise(resolve => {
         const check = () => {
-            if (window.Kingdom && window.City && window.SpaceBase && window.Dungeon) resolve();
+            if (window.Kingdom && window.City && window.SpaceBase && window.Dungeon && window.Graveyard) resolve();
             else setTimeout(check, 50);
         };
         check();
@@ -434,7 +435,7 @@ async function toggleHabit(habitName) {
         checkWorldUnlocks();
 
         // Grow the world and get building info
-        const worlds = { kingdom, city, spacebase, dungeon };
+        const worlds = { kingdom, city, spacebase, dungeon, graveyard };
         const world = worlds[currentWorld];
         const buildingInfo = await world.grow(habitName);
 
@@ -507,7 +508,7 @@ function isWorldUnlocked(worldName) {
 }
 
 function checkWorldUnlocks() {
-    const worlds = ['city', 'spacebase', 'dungeon'];
+    const worlds = ['city', 'spacebase', 'dungeon', 'graveyard'];
 
     for (const worldName of worlds) {
         const wasLocked = !localStorage.getItem(`lilWins_${worldName}_unlocked`);
@@ -552,7 +553,8 @@ function updateWorldSelector() {
         kingdom: 'Build your kingdom, one win at a time',
         city: 'Build your city, one win at a time',
         spacebase: 'Explore the cosmos, one win at a time',
-        dungeon: 'Discover secrets, one win at a time'
+        dungeon: 'Discover secrets, one win at a time',
+        graveyard: 'Haunt the night, one win at a time'
     };
     document.getElementById('world-subtitle').textContent = subtitles[currentWorld];
 }
@@ -565,7 +567,7 @@ async function switchWorld(worldName) {
     }
 
     const container = document.getElementById('kingdom-container');
-    const worlds = { kingdom, city, spacebase, dungeon };
+    const worlds = { kingdom, city, spacebase, dungeon, graveyard };
 
     // Save and cleanup current world
     if (worlds[currentWorld]) {
@@ -597,6 +599,10 @@ async function switchWorld(worldName) {
         dungeon = new Dungeon(container);
         await waitForLoad(dungeon);
         await dungeon.load();
+    } else if (worldName === 'graveyard') {
+        graveyard = new Graveyard(container);
+        await waitForLoad(graveyard);
+        await graveyard.load();
     } else {
         kingdom = new Kingdom(container);
         await waitForLoad(kingdom);
@@ -616,7 +622,7 @@ function updateUI() {
     document.getElementById('mobile-streak-count').textContent = currentStreak;
 
     // Update stats
-    const worlds = { kingdom, city, spacebase, dungeon };
+    const worlds = { kingdom, city, spacebase, dungeon, graveyard };
     const world = worlds[currentWorld];
     if (world) {
         const stats = world.getStats();
@@ -839,7 +845,7 @@ function closeSidebar() {
 }
 
 function resetCurrentWorld() {
-    const worldNames = { kingdom: 'Kingdom', city: 'City', spacebase: 'Space Base', dungeon: 'Dungeon' };
+    const worldNames = { kingdom: 'Kingdom', city: 'City', spacebase: 'Space Base', dungeon: 'Dungeon', graveyard: 'Graveyard' };
 
     if (!confirm(`Reset ${worldNames[currentWorld]}? This will clear all buildings.`)) return;
 
@@ -847,7 +853,8 @@ function resetCurrentWorld() {
         kingdom: 'tinyHabitsGarden',
         city: 'tinyHabitsCity',
         spacebase: 'tinyHabitsSpaceBase',
-        dungeon: 'tinyHabitsDungeon'
+        dungeon: 'tinyHabitsDungeon',
+        graveyard: 'tinyHabitsGraveyard'
     };
 
     localStorage.removeItem(keys[currentWorld]);
