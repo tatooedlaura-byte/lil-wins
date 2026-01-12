@@ -330,14 +330,23 @@ class Kingdom {
         }
     }
 
-    // Find empty adjacent hex
-    findEmptyAdjacentHex() {
-        // Hex directions (axial coordinates)
-        const directions = [
-            { q: 1, r: 0 }, { q: 1, r: -1 }, { q: 0, r: -1 },
-            { q: -1, r: 0 }, { q: -1, r: 1 }, { q: 0, r: 1 }
-        ];
+    // Get hex distance from center
+    hexDistance(q, r) {
+        return Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r));
+    }
 
+    // Get the zone for a hex (determines what can be built there)
+    getZone(q, r) {
+        const dist = this.hexDistance(q, r);
+        if (dist === 0) return 'center';      // Castle/Church
+        if (dist === 1) return 'plaza';       // Roads around center
+        if (dist <= 2) return 'commercial';   // Market, Tavern, Well
+        if (dist <= 4) return 'residential';  // Homes
+        return 'outskirts';                   // Farms, nature, characters
+    }
+
+    // Find the next hex to place using a spiral pattern from center
+    findNextHexSpiral() {
         const occupied = new Set(this.hexes.map(h => this.hexKey(h.q, h.r)));
 
         // If no hexes, return center
@@ -345,30 +354,69 @@ class Kingdom {
             return { q: 0, r: 0 };
         }
 
-        // Find all empty adjacent hexes
-        const candidates = [];
-        for (const hex of this.hexes) {
-            for (const dir of directions) {
-                const newQ = hex.q + dir.q;
-                const newR = hex.r + dir.r;
-                const key = this.hexKey(newQ, newR);
+        // Spiral outward from center
+        for (let ring = 0; ring <= this.gridRadius; ring++) {
+            const hexesInRing = this.getHexRing(ring);
+            const emptyInRing = hexesInRing.filter(h => !occupied.has(this.hexKey(h.q, h.r)));
 
-                // Check if within grid radius and not occupied
-                const dist = Math.max(Math.abs(newQ), Math.abs(newR), Math.abs(-newQ - newR));
-                if (dist <= this.gridRadius && !occupied.has(key)) {
-                    candidates.push({ q: newQ, r: newR, dist });
+            if (emptyInRing.length > 0) {
+                // For more organic growth, pick randomly from this ring
+                // but prefer spots adjacent to existing hexes
+                const adjacent = emptyInRing.filter(h => {
+                    const dirs = this.getHexDirections();
+                    return dirs.some(d => occupied.has(this.hexKey(h.q + d.q, h.r + d.r)));
+                });
+
+                if (adjacent.length > 0) {
+                    return adjacent[Math.floor(Math.random() * adjacent.length)];
                 }
+                return emptyInRing[Math.floor(Math.random() * emptyInRing.length)];
             }
         }
 
-        if (candidates.length === 0) return null;
+        return null;
+    }
 
-        // Prefer hexes closer to center
-        candidates.sort((a, b) => a.dist - b.dist);
+    // Get all hexes in a ring at distance 'ring' from center
+    getHexRing(ring) {
+        if (ring === 0) return [{ q: 0, r: 0 }];
 
-        // Pick randomly from top candidates
-        const topCandidates = candidates.filter(c => c.dist === candidates[0].dist);
-        return topCandidates[Math.floor(Math.random() * topCandidates.length)];
+        const results = [];
+        const directions = this.getHexDirections();
+
+        // Start at one corner and walk around the ring
+        let q = 0, r = -ring; // Start at "top"
+
+        for (let side = 0; side < 6; side++) {
+            const dir = directions[(side + 2) % 6]; // Direction to walk
+            for (let step = 0; step < ring; step++) {
+                results.push({ q, r });
+                q += dir.q;
+                r += dir.r;
+            }
+        }
+
+        return results;
+    }
+
+    // Check if a road should be placed at this location
+    shouldPlaceRoad(q, r) {
+        const dist = this.hexDistance(q, r);
+
+        // Ring 1: always roads (plaza around center)
+        if (dist === 1) return true;
+
+        // Main roads extending outward (every 60 degrees)
+        // These are along the 6 hex directions from center
+        const isOnAxis = (q === 0 || r === 0 || q === -r);
+        if (isOnAxis && dist <= 5) return true;
+
+        return false;
+    }
+
+    // Find empty adjacent hex (legacy method, now uses spiral)
+    findEmptyAdjacentHex() {
+        return this.findNextHexSpiral();
     }
 
     // Place a hex tile with optional building
@@ -489,30 +537,83 @@ class Kingdom {
         return items[0];
     }
 
+    // Get appropriate building for a zone
+    getBuildingForZone(zone) {
+        switch (zone) {
+            case 'center':
+                // First building is always church (town center)
+                if (this.hexes.length === 0) return { tile: 'hex_grass', building: 'church' };
+                return { tile: 'hex_grass', building: 'church' };
+
+            case 'plaza':
+                // Roads around the center
+                return { tile: 'hex_road', building: null };
+
+            case 'commercial':
+                // Market, tavern, well, blacksmith
+                const commercial = ['market', 'tavern', 'well', 'blacksmith'];
+                const commercialWeights = [3, 3, 2, 2];
+                return {
+                    tile: 'hex_grass',
+                    building: this.weightedRandom(commercial, commercialWeights)
+                };
+
+            case 'residential':
+                // Mostly homes, occasionally a well or trees
+                const residential = ['home_A', 'home_B', 'home_A', 'home_B', 'well', 'trees_A', null];
+                const residentialWeights = [4, 4, 4, 4, 1, 2, 1];
+                return {
+                    tile: 'hex_grass',
+                    building: this.weightedRandom(residential, residentialWeights)
+                };
+
+            case 'outskirts':
+            default:
+                // Farms, nature, and characters
+                // Check if this should be a road
+                const outskirts = [
+                    'windmill', 'lumbermill', 'mine',
+                    'trees_A', 'trees_B', 'rocks', 'hills',
+                    'knight', 'barbarian', 'mage', 'ranger', 'rogue',
+                    null, null
+                ];
+                const outskirtsWeights = [
+                    2, 2, 2,
+                    4, 4, 2, 2,
+                    1, 1, 1, 1, 1,
+                    3, 3
+                ];
+                return {
+                    tile: 'hex_grass',
+                    building: this.weightedRandom(outskirts, outskirtsWeights)
+                };
+        }
+    }
+
     // Grow the kingdom - add a new hex with a building
     async grow(habitName = null) {
         const spot = this.findEmptyAdjacentHex();
         if (!spot) return null;
 
-        // Pick a random tile type (hex_road will be resolved to correct type in placeHex)
-        const tileTypes = ['hex_grass', 'hex_grass', 'hex_grass', 'hex_road', 'hex_road',
-                          'hex_water', 'hex_coast_A', 'hex_coast_B'];
-        const tileWeights = [10, 10, 10, 3, 3, 1, 1, 1]; // Grass most common, roads fairly common
-        const tileType = this.weightedRandom(tileTypes, tileWeights);
+        const zone = this.getZone(spot.q, spot.r);
 
-        // Pick a random building (or none for water/roads/some tiles)
-        let buildingType = null;
+        // Determine tile and building based on zone
+        let tileType, buildingType;
 
-        // Don't put buildings on water or roads
-        if (!tileType.includes('water') && !tileType.includes('road')) {
-            const buildingTypes = ['home_A', 'home_B', 'church', 'tavern', 'market',
-                                   'blacksmith', 'windmill', 'well', 'lumbermill', 'mine',
-                                   'trees_A', 'trees_B', 'rocks', 'hills',
-                                   'knight', 'barbarian', 'mage', 'ranger', 'rogue', null];
-            const weights = [5, 5, 1, 2, 2, 1, 1, 2, 1, 1, 3, 3, 2, 2,
-                            2, 2, 2, 2, 2, 3]; // characters have weight 2 each
+        // Check if this should be a road (main arteries)
+        if (this.shouldPlaceRoad(spot.q, spot.r) && zone !== 'center') {
+            tileType = 'hex_road';
+            buildingType = null;
+        } else {
+            const zoneConfig = this.getBuildingForZone(zone);
+            tileType = zoneConfig.tile;
+            buildingType = zoneConfig.building;
+        }
 
-            buildingType = this.weightedRandom(buildingTypes, weights);
+        // Small chance of water/coast on outskirts (for variety)
+        if (zone === 'outskirts' && !buildingType && Math.random() < 0.1) {
+            const waterTiles = ['hex_water', 'hex_coast_A', 'hex_coast_B'];
+            tileType = waterTiles[Math.floor(Math.random() * waterTiles.length)];
         }
 
         const result = await this.placeHex(spot.q, spot.r, tileType, buildingType);
