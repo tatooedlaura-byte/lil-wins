@@ -106,11 +106,28 @@ class Kingdom {
             lumbermill: { path: 'assets/kaykit/buildings/blue/building_lumbermill_blue.gltf', type: 'building', name: 'Lumbermill' },
             mine: { path: 'assets/kaykit/buildings/blue/building_mine_blue.gltf', type: 'building', name: 'Mine' },
 
-            // Decorations
+            // More buildings
+            barracks: { path: 'assets/kaykit/buildings/blue/building_barracks_blue.gltf', type: 'building', name: 'Barracks' },
+            archeryrange: { path: 'assets/kaykit/buildings/blue/building_archeryrange_blue.gltf', type: 'building', name: 'Archery Range' },
+            grain: { path: 'assets/kaykit/buildings/neutral/building_grain.gltf', type: 'building', name: 'Grain Storage' },
+            stage: { path: 'assets/kaykit/buildings/neutral/building_stage_A.gltf', type: 'building', name: 'Stage' },
+
+            // Nature decorations
             trees_A: { path: 'assets/kaykit/decoration/nature/trees_A_medium.gltf', type: 'decoration', name: 'Trees' },
             trees_B: { path: 'assets/kaykit/decoration/nature/trees_B_medium.gltf', type: 'decoration', name: 'Trees' },
             rocks: { path: 'assets/kaykit/decoration/nature/rock_single_A.gltf', type: 'decoration', name: 'Rocks' },
             hills: { path: 'assets/kaykit/decoration/nature/hill_single_A.gltf', type: 'decoration', name: 'Hills' },
+
+            // Props
+            target: { path: 'assets/kaykit/decoration/props/target.gltf', type: 'decoration', name: 'Target' },
+            tent: { path: 'assets/kaykit/decoration/props/tent.gltf', type: 'decoration', name: 'Tent' },
+            barrel: { path: 'assets/kaykit/decoration/props/barrel.gltf', type: 'decoration', name: 'Barrel' },
+            crate: { path: 'assets/kaykit/decoration/props/crate_A_big.gltf', type: 'decoration', name: 'Crate' },
+            sack: { path: 'assets/kaykit/decoration/props/sack.gltf', type: 'decoration', name: 'Sack' },
+            weaponrack: { path: 'assets/kaykit/decoration/props/weaponrack.gltf', type: 'decoration', name: 'Weapon Rack' },
+            wheelbarrow: { path: 'assets/kaykit/decoration/props/wheelbarrow.gltf', type: 'decoration', name: 'Wheelbarrow' },
+            lumber: { path: 'assets/kaykit/decoration/props/resource_lumber.gltf', type: 'decoration', name: 'Lumber' },
+            flag: { path: 'assets/kaykit/decoration/props/flag_blue.gltf', type: 'decoration', name: 'Flag' },
 
             // Characters (villagers)
             knight: { path: 'assets/kaykit/characters/Knight.glb', type: 'character', name: 'Knight', scale: 0.25 },
