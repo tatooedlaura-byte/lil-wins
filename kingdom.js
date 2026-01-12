@@ -490,7 +490,7 @@ class Kingdom {
     }
 
     // Grow the kingdom - add a new hex with a building
-    async grow() {
+    async grow(habitName = null) {
         const spot = this.findEmptyAdjacentHex();
         if (!spot) return null;
 
@@ -515,15 +515,50 @@ class Kingdom {
             buildingType = this.weightedRandom(buildingTypes, weights);
         }
 
-        await this.placeHex(spot.q, spot.r, tileType, buildingType);
+        const result = await this.placeHex(spot.q, spot.r, tileType, buildingType);
+        const worldPos = this.hexToWorld(spot.q, spot.r);
+
+        // Store habit info on the hex for tooltip
+        const hex = this.getHexAt(spot.q, spot.r);
+        if (hex && habitName) {
+            hex.habitName = habitName;
+        }
+
+        // Pan camera to the new building
+        this.panToPosition(worldPos.x, worldPos.z);
 
         if (buildingType && this.modelDefs[buildingType]) {
             return {
                 type: this.modelDefs[buildingType].type,
                 name: this.modelDefs[buildingType].name,
+                position: { q: spot.q, r: spot.r, x: worldPos.x, z: worldPos.z },
             };
         }
-        return { type: 'tile', name: 'Land' };
+        return { type: 'tile', name: 'Land', position: { q: spot.q, r: spot.r, x: worldPos.x, z: worldPos.z } };
+    }
+
+    // Smoothly pan camera to look at a position
+    panToPosition(x, z) {
+        const targetX = x;
+        const targetZ = z;
+        const startTarget = this.controls.target.clone();
+        const startTime = Date.now();
+        const duration = 800; // ms
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const t = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const ease = 1 - Math.pow(1 - t, 3);
+
+            this.controls.target.x = startTarget.x + (targetX - startTarget.x) * ease;
+            this.controls.target.z = startTarget.z + (targetZ - startTarget.z) * ease;
+
+            if (t < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+        animate();
     }
 
     getStats() {
@@ -539,18 +574,27 @@ class Kingdom {
             r: h.r,
             tileType: h.tileType,
             buildingType: h.buildingType,
+            habitName: h.habitName || null,
         }));
+        // Support both old and new key names
         localStorage.setItem('tinyHabitsKingdom', JSON.stringify(data));
+        localStorage.setItem('tinyHabitsGarden', JSON.stringify(data));
     }
 
     async load() {
-        const saved = localStorage.getItem('tinyHabitsKingdom');
+        // Support both old and new key names
+        const saved = localStorage.getItem('tinyHabitsKingdom') || localStorage.getItem('tinyHabitsGarden');
         if (!saved) return false;
 
         try {
             const data = JSON.parse(saved);
-            for (const hex of data) {
-                await this.placeHex(hex.q, hex.r, hex.tileType, hex.buildingType);
+            for (const hexData of data) {
+                await this.placeHex(hexData.q, hexData.r, hexData.tileType, hexData.buildingType);
+                // Restore habit name if saved
+                if (hexData.habitName) {
+                    const hex = this.getHexAt(hexData.q, hexData.r);
+                    if (hex) hex.habitName = hexData.habitName;
+                }
             }
             return true;
         } catch (e) {

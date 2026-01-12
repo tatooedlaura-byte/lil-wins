@@ -7,39 +7,104 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Onboarding Modal -->
+    <div id="onboarding-modal" class="modal">
+        <div class="modal-content onboarding">
+            <h2>Welcome to Lil' Wins!</h2>
+            <p class="onboarding-intro">Pick 3-5 tiny habits to start building your kingdom. You can always add more later.</p>
+
+            <div class="onboarding-categories" id="onboarding-categories">
+                <!-- Categories will be populated by JS -->
+            </div>
+
+            <div class="onboarding-selected">
+                <h3>Your habits (<span id="selected-count">0</span>/5)</h3>
+                <div id="selected-habits" class="selected-habits-list"></div>
+            </div>
+
+            <div class="onboarding-actions">
+                <button id="start-btn" class="btn btn-primary" disabled>Start Building</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Building Info Tooltip -->
+    <div id="building-tooltip" class="building-tooltip hidden">
+        <div class="tooltip-content">
+            <span class="tooltip-icon">🏠</span>
+            <div class="tooltip-text">
+                <strong id="tooltip-building-name">House</strong>
+                <span id="tooltip-habit-name">Built from: Brush teeth</span>
+            </div>
+        </div>
+    </div>
+
     <div id="app">
-        <aside class="sidebar">
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+            <button id="menu-toggle" class="menu-toggle">☰</button>
             <h1>Lil' Wins</h1>
+            <div class="mobile-streak">
+                <span class="streak-fire">🔥</span>
+                <span id="mobile-streak-count">0</span>
+            </div>
+        </header>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>Lil' Wins</h1>
+                <button id="close-sidebar" class="close-sidebar">×</button>
+            </div>
             <p class="subtitle" id="world-subtitle">Build your kingdom, one win at a time</p>
+
+            <!-- Streak Display -->
+            <div class="streak-display">
+                <div class="streak-main">
+                    <span class="streak-fire">🔥</span>
+                    <span class="streak-count" id="streak-count">0</span>
+                    <span class="streak-label">day streak</span>
+                </div>
+                <button id="view-history-btn" class="btn-small">📅 History</button>
+            </div>
 
             <div class="world-selector">
                 <button class="world-btn active" data-world="kingdom" title="Medieval Kingdom">
                     <span class="world-icon">🏰</span>
                     <span class="world-name">Kingdom</span>
                 </button>
-                <button class="world-btn locked" data-world="city" title="Modern City (Unlock at 50 tiles)">
+                <button class="world-btn locked" data-world="city" title="Modern City">
                     <span class="world-icon">🏙️</span>
                     <span class="world-name">City</span>
                     <span class="world-lock">🔒</span>
+                    <span class="world-progress"></span>
                 </button>
-                <button class="world-btn locked" data-world="spacebase" title="Space Base (Unlock at 100 tiles)">
+                <button class="world-btn locked" data-world="spacebase" title="Space Base">
                     <span class="world-icon">🚀</span>
                     <span class="world-name">Space</span>
                     <span class="world-lock">🔒</span>
+                    <span class="world-progress"></span>
                 </button>
-                <button class="world-btn locked" data-world="dungeon" title="Dungeon (Unlock at 150 tiles)">
+                <button class="world-btn locked" data-world="dungeon" title="Dungeon">
                     <span class="world-icon">🏛️</span>
                     <span class="world-name">Dungeon</span>
                     <span class="world-lock">🔒</span>
+                    <span class="world-progress"></span>
                 </button>
             </div>
 
             <div class="habits-section">
-                <div class="custom-habit-row">
-                    <input type="text" id="new-habit-input" placeholder="Add your own habit...">
-                    <button id="save-habit-btn" class="btn-icon" title="Add habit">+</button>
+                <div class="habits-header">
+                    <h2>My Habits</h2>
+                    <button id="add-habits-btn" class="btn-small">+ Add</button>
                 </div>
                 <div id="habits-list"></div>
+
+                <!-- Suggestions Section -->
+                <div id="suggestions-section" class="suggestions-section hidden">
+                    <h3>Suggested Habits</h3>
+                    <div id="habit-suggestions" class="habit-suggestions"></div>
+                    <button id="refresh-suggestions" class="btn-small">↻ More ideas</button>
+                </div>
             </div>
 
             <div class="stats">
@@ -52,14 +117,86 @@
                     <span class="stat-label">Tiles</span>
                 </div>
                 <div class="stat">
-                    <button id="reset-world-btn" class="btn btn-secondary" title="Reset current world">Reset</button>
+                    <span class="stat-value" id="today-count">0</span>
+                    <span class="stat-label">Today</span>
                 </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="reset-world-btn" class="btn btn-secondary btn-small">Reset World</button>
+                <button id="reset-habits-btn" class="btn btn-secondary btn-small">Edit Habits</button>
             </div>
         </aside>
 
         <main class="city-view" id="kingdom-container">
             <!-- Three.js canvas will be inserted here -->
         </main>
+
+        <!-- Mobile Bottom Sheet for Habits -->
+        <div id="mobile-habits-sheet" class="mobile-sheet hidden">
+            <div class="sheet-handle"></div>
+            <div class="sheet-content">
+                <div class="sheet-header">
+                    <h2>Today's Habits</h2>
+                    <span id="sheet-progress">0/0</span>
+                </div>
+                <div id="mobile-habits-list"></div>
+            </div>
+        </div>
+
+        <!-- Mobile FAB to show habits -->
+        <button id="mobile-fab" class="mobile-fab">
+            <span class="fab-icon">✓</span>
+            <span class="fab-badge" id="fab-badge">0</span>
+        </button>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content history">
+            <div class="modal-header">
+                <h2>Your History</h2>
+                <button class="modal-close" id="close-history">×</button>
+            </div>
+            <div class="history-stats">
+                <div class="history-stat">
+                    <span class="history-stat-value" id="total-completions">0</span>
+                    <span class="history-stat-label">Total Wins</span>
+                </div>
+                <div class="history-stat">
+                    <span class="history-stat-value" id="best-streak">0</span>
+                    <span class="history-stat-label">Best Streak</span>
+                </div>
+                <div class="history-stat">
+                    <span class="history-stat-value" id="days-active">0</span>
+                    <span class="history-stat-label">Days Active</span>
+                </div>
+            </div>
+            <div class="calendar-container" id="calendar-container">
+                <!-- Calendar will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Habit Modal -->
+    <div id="add-habit-modal" class="modal hidden">
+        <div class="modal-content add-habit">
+            <div class="modal-header">
+                <h2>Add a Habit</h2>
+                <button class="modal-close" id="close-add-habit">×</button>
+            </div>
+
+            <div class="add-habit-custom">
+                <input type="text" id="new-habit-input" placeholder="Type your own habit...">
+                <button id="save-habit-btn" class="btn btn-primary">Add</button>
+            </div>
+
+            <div class="add-habit-browse">
+                <h3>Or browse ideas:</h3>
+                <div class="category-tabs" id="category-tabs"></div>
+                <div class="category-habits" id="category-habits"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Three.js -->
