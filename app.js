@@ -870,6 +870,35 @@ function showToast(message, celebrate = false) {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+
+    // Show confetti for celebrations!
+    if (celebrate) {
+        launchConfetti();
+    }
+}
+
+function launchConfetti() {
+    const colors = ['#e94560', '#4ade80', '#fbbf24', '#60a5fa', '#a78bfa', '#f472b6'];
+    const confettiCount = 150;
+
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+
+        // Random shape
+        if (Math.random() > 0.5) {
+            confetti.style.borderRadius = '50%';
+        }
+
+        document.body.appendChild(confetti);
+
+        // Remove after animation
+        setTimeout(() => confetti.remove(), 4000);
+    }
 }
 
 function getRandomMessage(type) {
