@@ -89,14 +89,6 @@ class Kingdom {
             hex_grass_sloped_high: { path: 'assets/kaykit/tiles/base/hex_grass_sloped_high.gltf', type: 'tile' },
             hex_water: { path: 'assets/kaykit/tiles/base/hex_water.gltf', type: 'tile' },
 
-            // Road tiles
-            hex_road_A: { path: 'assets/kaykit/tiles/roads/hex_road_A.gltf', type: 'tile' },
-            hex_road_B: { path: 'assets/kaykit/tiles/roads/hex_road_B.gltf', type: 'tile' },
-            hex_road_C: { path: 'assets/kaykit/tiles/roads/hex_road_C.gltf', type: 'tile' },
-            hex_road_D: { path: 'assets/kaykit/tiles/roads/hex_road_D.gltf', type: 'tile' },
-            hex_road_E: { path: 'assets/kaykit/tiles/roads/hex_road_E.gltf', type: 'tile' },
-            hex_road_F: { path: 'assets/kaykit/tiles/roads/hex_road_F.gltf', type: 'tile' },
-
             // Coast tiles
             hex_coast_A: { path: 'assets/kaykit/tiles/coast/hex_coast_A.gltf', type: 'tile' },
             hex_coast_B: { path: 'assets/kaykit/tiles/coast/hex_coast_B.gltf', type: 'tile' },
@@ -217,117 +209,9 @@ class Kingdom {
         ];
     }
 
-    // Get neighboring hexes that have roads
-    getRoadNeighbors(q, r) {
-        const directions = this.getHexDirections();
-        const neighbors = [];
-
-        for (let i = 0; i < 6; i++) {
-            const dir = directions[i];
-            const nq = q + dir.q;
-            const nr = r + dir.r;
-            const hex = this.hexes.find(h => h.q === nq && h.r === nr);
-            if (hex && hex.tileType && hex.tileType.startsWith('hex_road')) {
-                neighbors.push(i); // Store direction index
-            }
-        }
-        return neighbors;
-    }
-
-    // Get the right road tile and rotation based on connections
-    // Road tile patterns (assuming standard hex road naming):
-    // A = straight (opposite sides: 0-3, 1-4, 2-5)
-    // B = corner (adjacent sides)
-    // C = Y-junction (3 connections, 120° apart)
-    // D = T-junction (3 connections, 2 adjacent + 1 opposite)
-    // E = 4-way
-    // F = 5-way
-    getRoadTileForConnections(connectionDirs) {
-        const count = connectionDirs.length;
-
-        if (count === 0) {
-            // No neighbors yet - use straight road, random rotation
-            return { tile: 'hex_road_A', rotation: Math.floor(Math.random() * 6) * (Math.PI / 3) };
-        }
-
-        if (count === 1) {
-            // One neighbor - dead end, use straight pointing toward neighbor
-            const dir = connectionDirs[0];
-            return { tile: 'hex_road_A', rotation: dir * (Math.PI / 3) };
-        }
-
-        if (count === 2) {
-            const [a, b] = connectionDirs.sort((x, y) => x - y);
-            const diff = b - a;
-
-            if (diff === 3) {
-                // Opposite sides - straight road
-                return { tile: 'hex_road_A', rotation: a * (Math.PI / 3) };
-            } else {
-                // Adjacent or skip - corner road
-                // Rotation should point the corner opening toward the connections
-                return { tile: 'hex_road_B', rotation: a * (Math.PI / 3) };
-            }
-        }
-
-        if (count === 3) {
-            // Y or T junction
-            return { tile: 'hex_road_C', rotation: connectionDirs[0] * (Math.PI / 3) };
-        }
-
-        if (count === 4) {
-            return { tile: 'hex_road_D', rotation: connectionDirs[0] * (Math.PI / 3) };
-        }
-
-        if (count === 5) {
-            return { tile: 'hex_road_E', rotation: connectionDirs[0] * (Math.PI / 3) };
-        }
-
-        // 6 connections - full crossroads
-        return { tile: 'hex_road_F', rotation: 0 };
-    }
-
     // Find hex object by coordinates
     getHexAt(q, r) {
         return this.hexes.find(h => h.q === q && h.r === r);
-    }
-
-    // Update a road tile's model based on current connections
-    async updateRoadTile(hex) {
-        if (!hex.tileType || !hex.tileType.startsWith('hex_road')) return;
-
-        const connections = this.getRoadNeighbors(hex.q, hex.r);
-        const { tile, rotation } = this.getRoadTileForConnections(connections);
-
-        // Remove old tile from scene
-        if (hex.tileModel) {
-            this.scene.remove(hex.tileModel);
-        }
-
-        // Load and place new tile
-        const tileModel = await this.loadModel(tile);
-        if (tileModel) {
-            const pos = this.hexToWorld(hex.q, hex.r);
-            hex.tileModel = tileModel.clone();
-            hex.tileModel.position.set(pos.x, 0, pos.z);
-            hex.tileModel.rotation.y = rotation;
-            hex.tileType = tile;
-            this.scene.add(hex.tileModel);
-        }
-    }
-
-    // Update all neighboring road tiles
-    async updateNeighborRoads(q, r) {
-        const directions = this.getHexDirections();
-
-        for (const dir of directions) {
-            const nq = q + dir.q;
-            const nr = r + dir.r;
-            const hex = this.getHexAt(nq, nr);
-            if (hex && hex.tileType && hex.tileType.startsWith('hex_road')) {
-                await this.updateRoadTile(hex);
-            }
-        }
     }
 
     // Get hex distance from center
@@ -339,8 +223,7 @@ class Kingdom {
     getZone(q, r) {
         const dist = this.hexDistance(q, r);
         if (dist === 0) return 'center';      // Castle/Church
-        if (dist === 1) return 'plaza';       // Roads around center
-        if (dist <= 2) return 'commercial';   // Market, Tavern, Well
+        if (dist <= 2) return 'commercial';   // Market, Tavern, Well (includes ring 1-2)
         if (dist <= 4) return 'residential';  // Homes
         return 'outskirts';                   // Farms, nature, characters
     }
@@ -399,21 +282,6 @@ class Kingdom {
         return results;
     }
 
-    // Check if a road should be placed at this location
-    shouldPlaceRoad(q, r) {
-        const dist = this.hexDistance(q, r);
-
-        // Ring 1: always roads (plaza around center)
-        if (dist === 1) return true;
-
-        // Main roads extending outward (every 60 degrees)
-        // These are along the 6 hex directions from center
-        const isOnAxis = (q === 0 || r === 0 || q === -r);
-        if (isOnAxis && dist <= 5) return true;
-
-        return false;
-    }
-
     // Find empty adjacent hex (legacy method, now uses spiral)
     findEmptyAdjacentHex() {
         return this.findNextHexSpiral();
@@ -422,16 +290,6 @@ class Kingdom {
     // Place a hex tile with optional building
     async placeHex(q, r, tileType, buildingType = null) {
         const pos = this.hexToWorld(q, r);
-        const isRoad = tileType && tileType.startsWith('hex_road');
-
-        // For roads, determine correct tile type and rotation based on neighbors
-        let tileRotation = 0;
-        if (isRoad) {
-            const connections = this.getRoadNeighbors(q, r);
-            const roadConfig = this.getRoadTileForConnections(connections);
-            tileType = roadConfig.tile;
-            tileRotation = roadConfig.rotation;
-        }
 
         // Load and place tile
         let placedTile = null;
@@ -439,7 +297,6 @@ class Kingdom {
         if (tileModel) {
             placedTile = tileModel.clone();
             placedTile.position.set(pos.x, 0, pos.z);
-            placedTile.rotation.y = tileRotation;
             this.scene.add(placedTile);
         }
 
@@ -518,11 +375,6 @@ class Kingdom {
             building,
         });
 
-        // Update neighboring road tiles if we just placed a road
-        if (isRoad) {
-            await this.updateNeighborRoads(q, r);
-        }
-
         return { q, r, buildingType };
     }
 
@@ -544,10 +396,6 @@ class Kingdom {
                 // First building is always church (town center)
                 if (this.hexes.length === 0) return { tile: 'hex_grass', building: 'church' };
                 return { tile: 'hex_grass', building: 'church' };
-
-            case 'plaza':
-                // Roads around the center
-                return { tile: 'hex_road', building: null };
 
             case 'commercial':
                 // Market, tavern, well, blacksmith
@@ -598,17 +446,9 @@ class Kingdom {
         const zone = this.getZone(spot.q, spot.r);
 
         // Determine tile and building based on zone
-        let tileType, buildingType;
-
-        // Check if this should be a road (main arteries)
-        if (this.shouldPlaceRoad(spot.q, spot.r) && zone !== 'center') {
-            tileType = 'hex_road';
-            buildingType = null;
-        } else {
-            const zoneConfig = this.getBuildingForZone(zone);
-            tileType = zoneConfig.tile;
-            buildingType = zoneConfig.building;
-        }
+        const zoneConfig = this.getBuildingForZone(zone);
+        let tileType = zoneConfig.tile;
+        let buildingType = zoneConfig.building;
 
         // Small chance of water/coast on outskirts (for variety)
         if (zone === 'outskirts' && !buildingType && Math.random() < 0.1) {

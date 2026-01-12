@@ -6,13 +6,24 @@ const template = [
     { q: 0, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
     { q: 0, r: 0, layer: 2, asset: 'church', rotation: 0 },
 
-    // ===== RING 1 - Plaza Roads =====
-    { q: 1, r: 0, layer: 1, asset: 'hex_road_A', rotation: 0 },
-    { q: 0, r: 1, layer: 1, asset: 'hex_road_A', rotation: Math.PI / 3 },
-    { q: -1, r: 1, layer: 1, asset: 'hex_road_A', rotation: 2 * Math.PI / 3 },
-    { q: -1, r: 0, layer: 1, asset: 'hex_road_A', rotation: Math.PI },
-    { q: 0, r: -1, layer: 1, asset: 'hex_road_A', rotation: -2 * Math.PI / 3 },
-    { q: 1, r: -1, layer: 1, asset: 'hex_road_A', rotation: -Math.PI / 3 },
+    // ===== RING 1 - Plaza with decorations =====
+    { q: 1, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
+    { q: 1, r: 0, layer: 2, asset: 'well', rotation: 0 },
+
+    { q: 0, r: 1, layer: 1, asset: 'hex_grass', rotation: 0 },
+    { q: 0, r: 1, layer: 2, asset: 'trees_A', rotation: Math.PI / 6 },
+
+    { q: -1, r: 1, layer: 1, asset: 'hex_grass', rotation: 0 },
+    { q: -1, r: 1, layer: 2, asset: 'trees_B', rotation: Math.PI / 2.5 },
+
+    { q: -1, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
+    { q: -1, r: 0, layer: 2, asset: 'well', rotation: 0 },
+
+    { q: 0, r: -1, layer: 1, asset: 'hex_grass', rotation: 0 },
+    { q: 0, r: -1, layer: 2, asset: 'trees_A', rotation: Math.PI / 1.5 },
+
+    { q: 1, r: -1, layer: 1, asset: 'hex_grass', rotation: 0 },
+    { q: 1, r: -1, layer: 2, asset: 'trees_B', rotation: Math.PI / 4 },
 
     // ===== RING 2 - Commercial District =====
     // Main spots with buildings
@@ -117,9 +128,9 @@ const template = [
     { q: -4, r: 4, layer: 1, asset: 'hex_grass', rotation: 0 },
     { q: -4, r: 4, layer: 2, asset: 'hills', rotation: 0 },
 
-    // A wandering knight
-    { q: 2, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
-    { q: 2, r: 2, layer: 2, asset: 'knight', rotation: Math.PI },
+    // A wandering knight (on its own tile)
+    { q: 4, r: -4, layer: 1, asset: 'hex_grass', rotation: 0 },
+    { q: 4, r: -4, layer: 2, asset: 'knight', rotation: Math.PI },
 ];
 
 // Output for saving
