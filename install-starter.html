@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Installing Kingdom Starter...</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            background: #1a1a2e;
+            color: #eaeaea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #16213e;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 { color: #4ade80; margin-bottom: 16px; }
+        p { color: #a0a0a0; margin-bottom: 24px; }
+        a {
+            display: inline-block;
+            background: #e94560;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover { background: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>✓ Kingdom Starter Installed!</h1>
+        <p>Your custom kingdom layout has been saved. The main app will now use this as the starting point.</p>
+        <a href="index.html">Open Lil' Wins →</a>
+    </div>
+
+    <script>
+        const template = [
+            // CENTER - Church
+            { q: 0, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 0, r: 0, layer: 2, asset: 'church', rotation: 0 },
+
+            // RING 1 - Plaza Roads
+            { q: 1, r: 0, layer: 1, asset: 'hex_road_A', rotation: 0 },
+            { q: 0, r: 1, layer: 1, asset: 'hex_road_A', rotation: 1.047 },
+            { q: -1, r: 1, layer: 1, asset: 'hex_road_A', rotation: 2.094 },
+            { q: -1, r: 0, layer: 1, asset: 'hex_road_A', rotation: 3.14 },
+            { q: 0, r: -1, layer: 1, asset: 'hex_road_A', rotation: -2.094 },
+            { q: 1, r: -1, layer: 1, asset: 'hex_road_A', rotation: -1.047 },
+
+            // RING 2 - Commercial
+            { q: 2, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 2, r: 0, layer: 2, asset: 'market', rotation: 3.14 },
+
+            { q: 1, r: 1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 1, r: 1, layer: 2, asset: 'tavern', rotation: -2.094 },
+
+            { q: -1, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -1, r: 2, layer: 2, asset: 'well', rotation: 0 },
+
+            { q: -2, r: 1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -2, r: 1, layer: 2, asset: 'blacksmith', rotation: 1.047 },
+
+            { q: -2, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -2, r: 0, layer: 2, asset: 'home_A', rotation: 0 },
+
+            { q: -1, r: -1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -1, r: -1, layer: 2, asset: 'home_B', rotation: 1.047 },
+
+            { q: 0, r: -2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 0, r: -2, layer: 2, asset: 'trees_A', rotation: 0 },
+
+            { q: 1, r: -2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 1, r: -2, layer: 2, asset: 'home_A', rotation: -1.047 },
+
+            { q: 2, r: -2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 2, r: -2, layer: 2, asset: 'home_B', rotation: -1.047 },
+
+            { q: 2, r: -1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 2, r: -1, layer: 2, asset: 'well', rotation: 0 },
+
+            { q: 0, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 0, r: 2, layer: 2, asset: 'trees_B', rotation: 1.57 },
+
+            { q: -2, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -2, r: 2, layer: 2, asset: 'home_A', rotation: 2.094 },
+
+            // RING 3 - Residential
+            { q: 3, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 3, r: 0, layer: 2, asset: 'home_A', rotation: 3.14 },
+
+            { q: 3, r: -1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 3, r: -1, layer: 2, asset: 'home_B', rotation: 3.14 },
+
+            { q: 3, r: -2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 3, r: -2, layer: 2, asset: 'trees_A', rotation: 0 },
+
+            { q: 3, r: -3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 3, r: -3, layer: 2, asset: 'home_A', rotation: -1.047 },
+
+            { q: 2, r: 1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 2, r: 1, layer: 2, asset: 'home_B', rotation: -2.094 },
+
+            { q: 1, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 1, r: 2, layer: 2, asset: 'home_A', rotation: -2.094 },
+
+            { q: 0, r: 3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 0, r: 3, layer: 2, asset: 'trees_B', rotation: 0 },
+
+            { q: -1, r: 3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -1, r: 3, layer: 2, asset: 'home_B', rotation: 2.094 },
+
+            { q: -2, r: 3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -2, r: 3, layer: 2, asset: 'home_A', rotation: 2.094 },
+
+            { q: -3, r: 3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -3, r: 3, layer: 2, asset: 'windmill', rotation: 0 },
+
+            { q: -3, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -3, r: 2, layer: 2, asset: 'home_B', rotation: 1.047 },
+
+            { q: -3, r: 1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -3, r: 1, layer: 2, asset: 'trees_A', rotation: 0.785 },
+
+            { q: -3, r: 0, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -3, r: 0, layer: 2, asset: 'home_A', rotation: 0 },
+
+            { q: -2, r: -1, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -2, r: -1, layer: 2, asset: 'home_B', rotation: 0 },
+
+            { q: -1, r: -2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -1, r: -2, layer: 2, asset: 'home_A', rotation: -1.047 },
+
+            { q: 0, r: -3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 0, r: -3, layer: 2, asset: 'lumbermill', rotation: 0 },
+
+            { q: 1, r: -3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 1, r: -3, layer: 2, asset: 'trees_B', rotation: 0 },
+
+            { q: 2, r: -3, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 2, r: -3, layer: 2, asset: 'home_B', rotation: -1.047 },
+
+            // Outer farms and nature
+            { q: 4, r: -2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 4, r: -2, layer: 2, asset: 'mine', rotation: 3.14 },
+
+            { q: -4, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -4, r: 2, layer: 2, asset: 'rocks', rotation: 0 },
+
+            { q: -4, r: 4, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: -4, r: 4, layer: 2, asset: 'hills', rotation: 0 },
+
+            // A knight patrolling
+            { q: 2, r: 2, layer: 1, asset: 'hex_grass', rotation: 0 },
+            { q: 2, r: 2, layer: 2, asset: 'knight', rotation: 3.14 },
+        ];
+
+        // Save to localStorage
+        localStorage.setItem('kingdomStarterTemplate', JSON.stringify(template));
+        localStorage.removeItem('tinyHabitsKingdom');
+        localStorage.removeItem('tinyHabitsGarden');
+
+        console.log('✓ Kingdom starter template installed!');
+    </script>
+</body>
+</html>
