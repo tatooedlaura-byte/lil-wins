@@ -298,6 +298,8 @@
         <div class="toolbar">
             <button onclick="clearGrid()">Clear Grid</button>
             <button class="secondary" onclick="exportLayout()">Export Layout</button>
+            <button style="background: #4ade80;" onclick="saveAsStarter()">Save as Starter</button>
+            <button class="secondary" onclick="loadStarter()">Load Starter</button>
             <span>Grid: <input type="number" id="grid-size" value="11" min="3" max="25" style="width: 50px; background: #1f2940; border: 1px solid #2a3a55; border-radius: 4px; color: #eaeaea; padding: 4px;">
             <button class="secondary" onclick="resizeGrid()">Resize</button></span>
             <span>Layer: <select id="current-layer" onchange="changeLayer()">
@@ -851,6 +853,103 @@
             navigator.clipboard.writeText(output).then(() => {
                 alert('Layout code copied to clipboard!');
             });
+        };
+
+        window.saveAsStarter = function() {
+            // Get the current layout items
+            const items = [];
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = gridData[y][x];
+                    for (let layer = 0; layer < 4; layer++) {
+                        if (cell.layers[layer]) {
+                            items.push({
+                                x, y, layer,
+                                asset: cell.layers[layer].asset,
+                                rotation: cell.layers[layer].rotation || 0
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Convert grid coords to hex coords (center of grid = 0,0)
+            const centerX = Math.floor(gridSize / 2);
+            const centerY = Math.floor(gridSize / 2);
+
+            const hexItems = items.map(item => {
+                // Convert offset coordinates to axial hex coordinates
+                const col = item.x - centerX;
+                const row = item.y - centerY;
+                // Offset to axial conversion (odd-r offset)
+                const q = col - Math.floor(row / 2);
+                const r = row;
+
+                return {
+                    q, r,
+                    layer: item.layer,
+                    asset: item.asset,
+                    rotation: item.rotation
+                };
+            });
+
+            // Save to localStorage
+            localStorage.setItem('kingdomStarterTemplate', JSON.stringify(hexItems));
+            localStorage.setItem('kingdomStarterGridSize', gridSize.toString());
+
+            // Also clear any existing kingdom so it loads fresh
+            localStorage.removeItem('tinyHabitsKingdom');
+            localStorage.removeItem('tinyHabitsGarden');
+
+            alert('Starter template saved! The main app will now use this layout as the starting point for new kingdoms.');
+        };
+
+        window.loadStarter = function() {
+            const saved = localStorage.getItem('kingdomStarterTemplate');
+            const savedSize = localStorage.getItem('kingdomStarterGridSize');
+
+            if (!saved) {
+                alert('No starter template found. Design your kingdom and click "Save as Starter" first.');
+                return;
+            }
+
+            try {
+                const items = JSON.parse(saved);
+                if (savedSize) {
+                    gridSize = parseInt(savedSize);
+                    document.getElementById('grid-size').value = gridSize;
+                }
+
+                // Clear and rebuild grid
+                buildGrid();
+
+                // Convert hex coords back to grid coords
+                const centerX = Math.floor(gridSize / 2);
+                const centerY = Math.floor(gridSize / 2);
+
+                for (const item of items) {
+                    // Axial to offset conversion (odd-r offset)
+                    const row = item.r;
+                    const col = item.q + Math.floor(row / 2);
+                    const x = col + centerX;
+                    const y = row + centerY;
+
+                    if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+                        gridData[y][x].layers[item.layer] = {
+                            asset: item.asset,
+                            rotation: item.rotation || 0
+                        };
+                        updateCellDisplay(x, y);
+                    }
+                }
+
+                updatePreview();
+                updateOutput();
+                alert('Starter template loaded!');
+            } catch (e) {
+                console.error('Failed to load starter:', e);
+                alert('Failed to load starter template.');
+            }
         };
 
         window.resizeGrid = function() {

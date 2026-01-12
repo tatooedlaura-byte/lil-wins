@@ -685,7 +685,12 @@ class Kingdom {
     async load() {
         // Support both old and new key names
         const saved = localStorage.getItem('tinyHabitsKingdom') || localStorage.getItem('tinyHabitsGarden');
-        if (!saved) return false;
+
+        // If no saved game, check for starter template
+        if (!saved) {
+            const starterLoaded = await this.loadStarterTemplate();
+            return starterLoaded;
+        }
 
         try {
             const data = JSON.parse(saved);
@@ -700,6 +705,66 @@ class Kingdom {
             return true;
         } catch (e) {
             console.warn('Failed to load kingdom:', e);
+            return false;
+        }
+    }
+
+    // Load starter template created in kingdom-designer.html
+    async loadStarterTemplate() {
+        const starterTemplate = localStorage.getItem('kingdomStarterTemplate');
+        if (!starterTemplate) return false;
+
+        try {
+            const items = JSON.parse(starterTemplate);
+            console.log('Loading starter template with', items.length, 'items');
+
+            // Group items by hex position
+            const hexMap = new Map();
+            for (const item of items) {
+                const key = `${item.q},${item.r}`;
+                if (!hexMap.has(key)) {
+                    hexMap.set(key, { q: item.q, r: item.r, layers: [] });
+                }
+                hexMap.get(key).layers.push(item);
+            }
+
+            // Place each hex
+            for (const [key, hexData] of hexMap) {
+                let tileType = 'hex_grass';
+                let buildingType = null;
+                let rotation = 0;
+
+                // Process layers (0=ground, 1=base tile, 2=building, 3=decoration)
+                for (const layer of hexData.layers) {
+                    const asset = layer.asset;
+
+                    // Determine what type of asset this is
+                    if (asset.startsWith('hex_')) {
+                        // It's a tile
+                        tileType = asset;
+                        rotation = layer.rotation || 0;
+                    } else if (this.modelDefs[asset]) {
+                        // It's a building/decoration/character
+                        buildingType = asset;
+                    }
+                }
+
+                await this.placeHex(hexData.q, hexData.r, tileType, buildingType);
+
+                // Apply rotation if specified
+                const hex = this.getHexAt(hexData.q, hexData.r);
+                if (hex && rotation && hex.tileModel) {
+                    hex.tileModel.rotation.y = rotation;
+                }
+            }
+
+            // Save this as the current kingdom state
+            this.save();
+            console.log('Starter template loaded successfully');
+            return true;
+
+        } catch (e) {
+            console.warn('Failed to load starter template:', e);
             return false;
         }
     }
