@@ -874,12 +874,17 @@ function resetCurrentWorld() {
         localStorage.removeItem(key);
     }
 
-    // Clear habits and onboarding to start completely fresh
-    localStorage.removeItem('lilWinsUserData');
+    // Clear ALL user data to start completely fresh
     localStorage.removeItem('lilWinsOnboarded');
+    localStorage.removeItem('lilWinsHabits');
     localStorage.removeItem('lilWinsStreaks');
     localStorage.removeItem('lilWinsHistory');
+    localStorage.removeItem('lilWinsBuildingHistory');
+    localStorage.removeItem('lilWinsCompletedToday');
+    localStorage.removeItem('lilWinsCurrentStreak');
+    localStorage.removeItem('lilWinsBestStreak');
     localStorage.removeItem('lilWinsTotalCompletions');
+    localStorage.removeItem('lilWinsLastDate');
 
     location.reload();
 }
