@@ -67,7 +67,7 @@ const graveyardTemplate = [
     { q: -4, r: 2, tile: 'floor_dirt', building: 'tree_pine_orange' },
     { q: -4, r: 1, tile: 'floor_dirt', building: 'grave_B' },
     { q: -4, r: 0, tile: 'floor_dirt', building: 'skull' },
-    { q: -3, r: -1, tile: 'floor_dirt', building: 'bone_A' },
+    { q: -3, r: -1, tile: 'floor_dirt', building: 'bone_pile' },
     { q: -2, r: -2, tile: 'floor_dirt', building: 'gravemarker_B' },
     { q: -1, r: -3, tile: 'floor_dirt', building: 'ribcage' },
     { q: 0, r: -4, tile: 'floor_dirt', building: 'shrine' },
@@ -354,19 +354,15 @@ class Graveyard {
         const occupied = new Set(this.hexes.map(h => this.hexKey(h.q, h.r)));
         if (this.hexes.length === 0) return { q: 0, r: 0 };
 
+        // Spiral outward from center, filling each ring in order
         for (let ring = 0; ring <= this.gridRadius; ring++) {
             const hexesInRing = this.getHexRing(ring);
-            const emptyInRing = hexesInRing.filter(h => !occupied.has(this.hexKey(h.q, h.r)));
 
-            if (emptyInRing.length > 0) {
-                const adjacent = emptyInRing.filter(h => {
-                    const dirs = this.getHexDirections();
-                    return dirs.some(d => occupied.has(this.hexKey(h.q + d.q, h.r + d.r)));
-                });
-                if (adjacent.length > 0) {
-                    return adjacent[Math.floor(Math.random() * adjacent.length)];
+            // Return the first empty hex in this ring (in order)
+            for (const hex of hexesInRing) {
+                if (!occupied.has(this.hexKey(hex.q, hex.r))) {
+                    return hex;
                 }
-                return emptyInRing[Math.floor(Math.random() * emptyInRing.length)];
             }
         }
         return null;
@@ -374,17 +370,31 @@ class Graveyard {
 
     getHexRing(ring) {
         if (ring === 0) return [{ q: 0, r: 0 }];
+
         const results = [];
-        const directions = this.getHexDirections();
+
+        // Directions to walk around the ring (in order)
+        const walkDirections = [
+            { q: 1, r: 0 },   // East
+            { q: 0, r: 1 },   // Southeast
+            { q: -1, r: 1 },  // Southwest
+            { q: -1, r: 0 },  // West
+            { q: 0, r: -1 },  // Northwest
+            { q: 1, r: -1 }, // Northeast
+        ];
+
+        // Start at "north" position of the ring
         let q = 0, r = -ring;
+
         for (let side = 0; side < 6; side++) {
-            const dir = directions[(side + 2) % 6];
+            const dir = walkDirections[side];
             for (let step = 0; step < ring; step++) {
                 results.push({ q, r });
                 q += dir.q;
                 r += dir.r;
             }
         }
+
         return results;
     }
 
