@@ -137,11 +137,11 @@ class Graveyard {
         pumpkinLight.position.set(0, 2, 0);
         this.scene.add(pumpkinLight);
 
-        // Brown ground plane to match dirt tiles
+        // Gray ground plane to match tile bases
         const groundSize = 40;
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
         const groundMat = new THREE.MeshStandardMaterial({
-            color: 0x5c4033,  // Brown to match floor_dirt tiles
+            color: 0x606060,  // Gray to match tile bases
             roughness: 1.0,
             metalness: 0
         });
