@@ -495,19 +495,19 @@
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
 
-            // Spooky lighting
-            const ambient = new THREE.AmbientLight(0x6666aa, 0.3);
+            // Bright lighting for design preview
+            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambient);
 
-            // Moonlight
-            const moon = new THREE.DirectionalLight(0xaaaaff, 0.4);
-            moon.position.set(-10, 20, 10);
-            scene.add(moon);
+            // Main directional light
+            const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+            sun.position.set(10, 20, 10);
+            scene.add(sun);
 
-            // Orange accent light (pumpkins)
-            const pumpkinLight = new THREE.PointLight(0xff6600, 0.4, 30);
-            pumpkinLight.position.set(0, 3, 0);
-            scene.add(pumpkinLight);
+            // Fill light from opposite side
+            const fill = new THREE.DirectionalLight(0xffffff, 0.5);
+            fill.position.set(-10, 10, -10);
+            scene.add(fill);
 
             // Ground plane - dark dirt
             const tileSize = 2;
