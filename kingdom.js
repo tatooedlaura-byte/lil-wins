@@ -274,13 +274,22 @@ class Kingdom {
         if (ring === 0) return [{ q: 0, r: 0 }];
 
         const results = [];
-        const directions = this.getHexDirections();
 
-        // Start at one corner and walk around the ring
-        let q = 0, r = -ring; // Start at "top"
+        // Directions to walk around the ring (in order)
+        const walkDirections = [
+            { q: 1, r: 0 },   // East
+            { q: 0, r: 1 },   // Southeast
+            { q: -1, r: 1 },  // Southwest
+            { q: -1, r: 0 },  // West
+            { q: 0, r: -1 },  // Northwest
+            { q: 1, r: -1 }, // Northeast
+        ];
+
+        // Start at "north" position of the ring
+        let q = 0, r = -ring;
 
         for (let side = 0; side < 6; side++) {
-            const dir = directions[(side + 2) % 6]; // Direction to walk
+            const dir = walkDirections[side];
             for (let step = 0; step < ring; step++) {
                 results.push({ q, r });
                 q += dir.q;
