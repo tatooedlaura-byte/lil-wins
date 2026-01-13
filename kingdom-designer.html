@@ -258,12 +258,21 @@
             color: #a0a0a0;
             margin-bottom: 12px;
         }
-        #preview-canvas {
+        .preview-container {
             flex: 1;
             width: 100%;
             background: #0d0d1a;
             border-radius: 8px;
             min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        #preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
         .output-section {
             margin-top: 16px;
@@ -356,7 +365,9 @@
             <strong>Drag</strong> assets from left panel onto grid.<br>
             <strong>Click</strong> placed item to select, then <strong>R</strong> to rotate, <strong>X/Delete</strong> to remove.
         </div>
-        <canvas id="preview-canvas"></canvas>
+        <div class="preview-container" id="preview-container">
+            <canvas id="preview-canvas"></canvas>
+        </div>
         <div class="output-section">
             <h3>Kingdom Template Code</h3>
             <div id="output">// Place items to generate code</div>
@@ -1120,8 +1131,8 @@
         let isResizing = false;
 
         function updateRendererSize() {
-            const canvas = document.getElementById('preview-canvas');
-            const rect = canvas.getBoundingClientRect();
+            const container = document.getElementById('preview-container');
+            const rect = container.getBoundingClientRect();
             if (renderer && rect.width > 0 && rect.height > 0) {
                 renderer.setSize(rect.width, rect.height);
                 camera.aspect = rect.width / rect.height;
@@ -1154,11 +1165,14 @@
             }
         });
 
-        // ResizeObserver to update canvas when panel size changes
+        // ResizeObserver to update canvas when container size changes
         const resizeObserver = new ResizeObserver(() => {
             updateRendererSize();
         });
-        resizeObserver.observe(document.getElementById('preview-canvas'));
+        resizeObserver.observe(document.getElementById('preview-container'));
+
+        // Also update on window resize
+        window.addEventListener('resize', updateRendererSize);
 
         // Collapsible output section
         document.querySelector('.output-section h3').addEventListener('click', () => {
