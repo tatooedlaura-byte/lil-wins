@@ -137,8 +137,8 @@ class Graveyard {
         pumpkinLight.position.set(0, 2, 0);
         this.scene.add(pumpkinLight);
 
-        // Gray ground plane to match tile bases
-        const groundSize = 40;
+        // Gray ground plane sized to match building grid
+        const groundSize = 24; // Template is -5 to 5, gridSpacing 2 = ~22 units
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
         const groundMat = new THREE.MeshStandardMaterial({
             color: 0xb0b0b0,  // Light gray
