@@ -79,7 +79,7 @@ class Graveyard {
         this.clock = new THREE.Clock();
         this.templateIndex = 0;
 
-        this.gridSpacing = 0.35; // Tighter spacing between tiles
+        this.gridSpacing = 0.5; // Spacing between tiles on square grid
         this.hexHeight = 0.1;
 
         this.init();
@@ -137,11 +137,11 @@ class Graveyard {
         pumpkinLight.position.set(0, 2, 0);
         this.scene.add(pumpkinLight);
 
-        // Brown dirt ground plane as base
+        // Gray ground plane to match model bases
         const groundSize = 20;
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
         const groundMat = new THREE.MeshStandardMaterial({
-            color: 0x3d2817,  // Dark brown dirt
+            color: 0x505050,  // Gray to match model bases
             roughness: 1.0,
             metalness: 0
         });
