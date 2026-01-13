@@ -136,7 +136,7 @@ class Graveyard {
         const groundSize = 24; // Template is -5 to 5, gridSpacing 2 = ~22 units
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
         const groundMat = new THREE.MeshStandardMaterial({
-            color: 0x909090,  // Lighter gray
+            color: 0xc0c0c0,  // Lighter gray
             roughness: 1.0,
             metalness: 0
         });
