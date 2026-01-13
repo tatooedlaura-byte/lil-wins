@@ -254,23 +254,15 @@ class Kingdom {
             return { q: 0, r: 0 };
         }
 
-        // Spiral outward from center
+        // Spiral outward from center, filling each ring in order
         for (let ring = 0; ring <= this.gridRadius; ring++) {
             const hexesInRing = this.getHexRing(ring);
-            const emptyInRing = hexesInRing.filter(h => !occupied.has(this.hexKey(h.q, h.r)));
 
-            if (emptyInRing.length > 0) {
-                // For more organic growth, pick randomly from this ring
-                // but prefer spots adjacent to existing hexes
-                const adjacent = emptyInRing.filter(h => {
-                    const dirs = this.getHexDirections();
-                    return dirs.some(d => occupied.has(this.hexKey(h.q + d.q, h.r + d.r)));
-                });
-
-                if (adjacent.length > 0) {
-                    return adjacent[Math.floor(Math.random() * adjacent.length)];
+            // Return the first empty hex in this ring (in order)
+            for (const hex of hexesInRing) {
+                if (!occupied.has(this.hexKey(hex.q, hex.r))) {
+                    return hex;
                 }
-                return emptyInRing[Math.floor(Math.random() * emptyInRing.length)];
             }
         }
 
