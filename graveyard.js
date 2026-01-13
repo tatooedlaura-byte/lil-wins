@@ -397,12 +397,14 @@ class Graveyard {
 
     async placeHex(q, r, tileType, buildingType = null) {
         const pos = this.hexToWorld(q, r);
+        const modelScale = 0.5; // Scale down Halloween models to fit hex grid
 
         let placedTile = null;
         const tileModel = await this.loadModel(tileType);
         if (tileModel) {
             placedTile = tileModel.clone();
             placedTile.position.set(pos.x, 0, pos.z);
+            placedTile.scale.setScalar(modelScale);
             this.scene.add(placedTile);
         }
 
@@ -412,6 +414,7 @@ class Graveyard {
             if (buildingModel) {
                 building = buildingModel.clone();
                 building.position.set(pos.x, 0, pos.z);
+                building.scale.setScalar(modelScale);
                 building.rotation.y = Math.floor(Math.random() * 6) * (Math.PI / 3);
                 this.scene.add(building);
             }
