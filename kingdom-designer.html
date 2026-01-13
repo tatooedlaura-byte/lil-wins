@@ -260,9 +260,10 @@
         }
         #preview-canvas {
             flex: 1;
+            width: 100%;
             background: #0d0d1a;
             border-radius: 8px;
-            min-height: 300px;
+            min-height: 400px;
         }
         .output-section {
             margin-top: 16px;
@@ -271,6 +272,24 @@
             font-size: 12px;
             color: #e94560;
             margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .output-section h3:hover {
+            color: #ff6b6b;
+        }
+        .output-section h3::before {
+            content: '▼';
+            font-size: 8px;
+            transition: transform 0.2s;
+        }
+        .output-section.collapsed h3::before {
+            transform: rotate(-90deg);
+        }
+        .output-section.collapsed #output {
+            display: none;
         }
         #output {
             background: #0d0d1a;
@@ -280,7 +299,7 @@
             font-family: monospace;
             font-size: 11px;
             color: #4ade80;
-            max-height: 200px;
+            max-height: 150px;
             overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-all;
@@ -1100,6 +1119,16 @@
         const previewPanel = document.getElementById('preview-panel');
         let isResizing = false;
 
+        function updateRendererSize() {
+            const canvas = document.getElementById('preview-canvas');
+            const rect = canvas.getBoundingClientRect();
+            if (renderer && rect.width > 0 && rect.height > 0) {
+                renderer.setSize(rect.width, rect.height);
+                camera.aspect = rect.width / rect.height;
+                camera.updateProjectionMatrix();
+            }
+        }
+
         resizeHandle.addEventListener('mousedown', (e) => {
             isResizing = true;
             resizeHandle.classList.add('dragging');
@@ -1112,14 +1141,7 @@
             const newWidth = window.innerWidth - e.clientX;
             if (newWidth >= 300 && newWidth <= 800) {
                 previewPanel.style.width = newWidth + 'px';
-                // Update Three.js renderer size
-                const canvas = document.getElementById('preview-canvas');
-                const rect = canvas.getBoundingClientRect();
-                if (renderer) {
-                    renderer.setSize(rect.width, rect.height);
-                    camera.aspect = rect.width / rect.height;
-                    camera.updateProjectionMatrix();
-                }
+                updateRendererSize();
             }
         });
 
@@ -1130,6 +1152,19 @@
                 document.body.style.cursor = '';
                 document.body.style.userSelect = '';
             }
+        });
+
+        // ResizeObserver to update canvas when panel size changes
+        const resizeObserver = new ResizeObserver(() => {
+            updateRendererSize();
+        });
+        resizeObserver.observe(document.getElementById('preview-canvas'));
+
+        // Collapsible output section
+        document.querySelector('.output-section h3').addEventListener('click', () => {
+            document.querySelector('.output-section').classList.toggle('collapsed');
+            // Update canvas size after collapse animation
+            setTimeout(updateRendererSize, 50);
         });
 
         // Initialize
