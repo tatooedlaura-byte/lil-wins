@@ -79,7 +79,7 @@ class Graveyard {
         this.clock = new THREE.Clock();
         this.templateIndex = 0;
 
-        this.hexSize = 0.5; // Matches model scale for proper tile spacing
+        this.gridSpacing = 0.5; // Spacing between tiles on square grid
         this.hexHeight = 0.1;
 
         this.init();
@@ -287,8 +287,9 @@ class Graveyard {
     }
 
     hexToWorld(q, r) {
-        const x = this.hexSize * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r);
-        const z = this.hexSize * (3 / 2 * r);
+        // Square grid - matches the designer layout
+        const x = this.gridSpacing * q;
+        const z = this.gridSpacing * r;
         return { x, z };
     }
 
