@@ -22,10 +22,10 @@ let daysActive = 0;
 
 // World unlock requirements (based on streak days, not arbitrary tiles)
 const UNLOCK_REQUIREMENTS = {
-    city: { type: 'streak', value: 3, message: 'Complete a 3-day streak to unlock the City!' },
-    spacebase: { type: 'streak', value: 7, message: 'Complete a 7-day streak to unlock Space Base!' },
-    dungeon: { type: 'streak', value: 14, message: 'Complete a 14-day streak to unlock the Dungeon!' },
-    graveyard: { type: 'streak', value: 21, message: 'Complete a 21-day streak to unlock the Graveyard!' }
+    city: { type: 'streak', value: 0, message: 'Complete a 3-day streak to unlock the City!' },
+    spacebase: { type: 'streak', value: 0, message: 'Complete a 7-day streak to unlock Space Base!' },
+    dungeon: { type: 'streak', value: 0, message: 'Complete a 14-day streak to unlock the Dungeon!' },
+    graveyard: { type: 'streak', value: 0, message: 'Complete a 21-day streak to unlock the Graveyard!' }
 };
 
 // Curated preset habits (reduced from 150+ to manageable categories)
