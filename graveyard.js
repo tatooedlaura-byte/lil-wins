@@ -79,7 +79,7 @@ class Graveyard {
         this.clock = new THREE.Clock();
         this.templateIndex = 0;
 
-        this.hexSize = 1;
+        this.hexSize = 0.5; // Matches model scale for proper tile spacing
         this.hexHeight = 0.1;
 
         this.init();
