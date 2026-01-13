@@ -877,6 +877,9 @@ function resetCurrentWorld() {
     // Clear habits and onboarding to start completely fresh
     localStorage.removeItem('lilWinsUserData');
     localStorage.removeItem('lilWinsOnboarded');
+    localStorage.removeItem('lilWinsStreaks');
+    localStorage.removeItem('lilWinsHistory');
+    localStorage.removeItem('lilWinsTotalCompletions');
 
     location.reload();
 }
