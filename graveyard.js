@@ -79,7 +79,7 @@ class Graveyard {
         this.clock = new THREE.Clock();
         this.templateIndex = 0;
 
-        this.gridSpacing = 0.5; // Spacing between tiles on square grid
+        this.gridSpacing = 2; // Match designer tileSize
         this.hexHeight = 0.1;
 
         this.init();
@@ -138,7 +138,7 @@ class Graveyard {
         this.scene.add(pumpkinLight);
 
         // Gray ground plane to match model bases
-        const groundSize = 20;
+        const groundSize = 40;
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
         const groundMat = new THREE.MeshStandardMaterial({
             color: 0x505050,  // Gray to match model bases
@@ -384,7 +384,7 @@ class Graveyard {
 
     async placeHex(q, r, tileType, buildingType = null) {
         const pos = this.hexToWorld(q, r);
-        const modelScale = 0.25; // Scale down Halloween models to fit hex grid
+        const modelScale = 1; // Match designer scale
 
         let placedTile = null;
         const tileModel = await this.loadModel(tileType);
