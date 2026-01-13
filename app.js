@@ -89,6 +89,11 @@ const MESSAGES = {
     unlock: [
         "🎊 NEW WORLD UNLOCKED! Check the world selector!",
     ],
+    worldComplete: [
+        "🏆 WORLD COMPLETE! You've built everything!",
+        "🏆 This world is finished! Try another world!",
+        "🏆 Amazing! Your world is fully built!"
+    ],
     compassion: [
         "Your world grows at your pace.",
         "Small wins build big things.",
@@ -454,11 +459,18 @@ async function toggleHabit(habitName) {
         // Show appropriate message
         const allDone = completedCount === userHabits.length;
         let messageType = 'building';
-        if (allDone) messageType = 'allDone';
-        else if (isFirstToday && currentStreak > 1) messageType = 'streak';
-        else if (isFirstToday) messageType = 'firstWin';
+        if (!buildingInfo) {
+            // World is complete!
+            messageType = 'worldComplete';
+        } else if (allDone) {
+            messageType = 'allDone';
+        } else if (isFirstToday && currentStreak > 1) {
+            messageType = 'streak';
+        } else if (isFirstToday) {
+            messageType = 'firstWin';
+        }
 
-        showToast(getRandomMessage(messageType), messageType === 'allDone');
+        showToast(getRandomMessage(messageType), messageType === 'allDone' || messageType === 'worldComplete');
 
         // Save and update
         world.save();
