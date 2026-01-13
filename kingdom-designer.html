@@ -245,11 +245,14 @@
             width: 450px;
             min-width: 300px;
             max-width: 800px;
+            height: 100%;
             background: #16213e;
             border-left: 1px solid #2a3a55;
             padding: 16px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
         }
         .preview-panel h2 {
             font-size: 14px;
@@ -257,13 +260,14 @@
             letter-spacing: 0.5px;
             color: #a0a0a0;
             margin-bottom: 12px;
+            flex-shrink: 0;
         }
         .preview-container {
-            flex: 1;
+            flex: 1 1 auto;
             width: 100%;
             background: #0d0d1a;
             border-radius: 8px;
-            min-height: 400px;
+            min-height: 200px;
             position: relative;
             overflow: hidden;
         }
@@ -276,6 +280,7 @@
         }
         .output-section {
             margin-top: 16px;
+            flex-shrink: 0;
         }
         .output-section h3 {
             font-size: 12px;
@@ -322,6 +327,7 @@
             font-size: 11px;
             color: #a0a0a0;
             margin-bottom: 12px;
+            flex-shrink: 0;
         }
         .instructions strong {
             color: #e94560;
