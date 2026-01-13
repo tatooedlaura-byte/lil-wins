@@ -87,10 +87,10 @@ class Graveyard {
     }
 
     init() {
-        // Scene with dark spooky sky
+        // Scene with lighter sky
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x1a1a2e); // Dark purple night
-        this.scene.fog = new THREE.Fog(0x1a1a2e, 10, 40);
+        this.scene.background = new THREE.Color(0x4a4a6e); // Lighter purple dusk
+        this.scene.fog = new THREE.Fog(0x4a4a6e, 15, 50);
 
         // Camera
         const aspect = this.container.clientWidth / this.container.clientHeight;
@@ -114,12 +114,12 @@ class Graveyard {
         this.controls.maxDistance = 40;
         this.controls.maxPolarAngle = Math.PI / 2.2;
 
-        // Spooky lighting - dim ambient with purple tint
-        const ambientLight = new THREE.AmbientLight(0x6a5acd, 0.3); // Slate blue
+        // Brighter ambient lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
-        // Moonlight - pale blue directional
-        const moonLight = new THREE.DirectionalLight(0x9090ff, 0.5);
+        // Bright directional light
+        const moonLight = new THREE.DirectionalLight(0xffffff, 0.8);
         moonLight.position.set(-5, 15, -5);
         moonLight.castShadow = true;
         moonLight.shadow.mapSize.width = 2048;
