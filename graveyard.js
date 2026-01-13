@@ -276,9 +276,6 @@ class Graveyard {
 
         console.log('Graveyard initialized');
         this.loaded = true;
-
-        // Place starting tile
-        this.placeHex(0, 0, 'floor_dirt');
     }
 
     async loadModel(modelId) {
