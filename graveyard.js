@@ -114,12 +114,12 @@ class Graveyard {
         this.controls.maxDistance = 40;
         this.controls.maxPolarAngle = Math.PI / 2.2;
 
-        // Dim spooky ambient with purple tint
-        const ambientLight = new THREE.AmbientLight(0x4a3a6a, 0.3);
+        // Spooky ambient with purple tint
+        const ambientLight = new THREE.AmbientLight(0x6a5a8a, 0.5);
         this.scene.add(ambientLight);
 
         // Pale moonlight
-        const moonLight = new THREE.DirectionalLight(0x8888ff, 0.4);
+        const moonLight = new THREE.DirectionalLight(0xaaaaff, 0.6);
         moonLight.position.set(-5, 15, -5);
         moonLight.castShadow = true;
         moonLight.shadow.mapSize.width = 2048;
@@ -131,16 +131,6 @@ class Graveyard {
         moonLight.shadow.camera.top = 15;
         moonLight.shadow.camera.bottom = -15;
         this.scene.add(moonLight);
-
-        // Eerie orange glow from jack-o-lanterns
-        const pumpkinLight = new THREE.PointLight(0xff4400, 0.8, 25);
-        pumpkinLight.position.set(0, 2, 0);
-        this.scene.add(pumpkinLight);
-
-        // Second spooky glow
-        const pumpkinLight2 = new THREE.PointLight(0xff6600, 0.5, 20);
-        pumpkinLight2.position.set(-5, 1, 3);
-        this.scene.add(pumpkinLight2);
 
         // Gray ground plane sized to match building grid
         const groundSize = 24; // Template is -5 to 5, gridSpacing 2 = ~22 units
