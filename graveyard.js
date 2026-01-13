@@ -115,11 +115,11 @@ class Graveyard {
         this.controls.maxPolarAngle = Math.PI / 2.2;
 
         // Spooky ambient with purple tint
-        const ambientLight = new THREE.AmbientLight(0x6a5a8a, 0.5);
+        const ambientLight = new THREE.AmbientLight(0x6a5a8a, 0.55);
         this.scene.add(ambientLight);
 
         // Pale moonlight
-        const moonLight = new THREE.DirectionalLight(0xaaaaff, 0.6);
+        const moonLight = new THREE.DirectionalLight(0xaaaaff, 0.66);
         moonLight.position.set(-5, 15, -5);
         moonLight.castShadow = true;
         moonLight.shadow.mapSize.width = 2048;
