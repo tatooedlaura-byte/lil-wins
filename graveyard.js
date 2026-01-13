@@ -141,7 +141,7 @@ class Graveyard {
         const groundSize = 40;
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
         const groundMat = new THREE.MeshStandardMaterial({
-            color: 0x606060,  // Gray to match tile bases
+            color: 0xd0d0d0,  // Light gray, almost white
             roughness: 1.0,
             metalness: 0
         });
