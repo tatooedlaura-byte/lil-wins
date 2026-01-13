@@ -229,9 +229,22 @@
             border: 2px solid #e94560;
         }
 
+        /* Resize Handle */
+        .resize-handle {
+            width: 6px;
+            background: #2a3a55;
+            cursor: col-resize;
+            transition: background 0.2s;
+        }
+        .resize-handle:hover, .resize-handle.dragging {
+            background: #e94560;
+        }
+
         /* Preview Panel */
         .preview-panel {
-            width: 350px;
+            width: 450px;
+            min-width: 300px;
+            max-width: 800px;
             background: #16213e;
             border-left: 1px solid #2a3a55;
             padding: 16px;
@@ -316,7 +329,9 @@
         </div>
     </div>
 
-    <div class="preview-panel">
+    <div class="resize-handle" id="resize-handle"></div>
+
+    <div class="preview-panel" id="preview-panel">
         <h2>3D Preview</h2>
         <div class="instructions">
             <strong>Drag</strong> assets from left panel onto grid.<br>
@@ -1079,6 +1094,43 @@
 
             thumbRenderer.dispose();
         }
+
+        // Resize handle functionality
+        const resizeHandle = document.getElementById('resize-handle');
+        const previewPanel = document.getElementById('preview-panel');
+        let isResizing = false;
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizeHandle.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const newWidth = window.innerWidth - e.clientX;
+            if (newWidth >= 300 && newWidth <= 800) {
+                previewPanel.style.width = newWidth + 'px';
+                // Update Three.js renderer size
+                const canvas = document.getElementById('preview-canvas');
+                const rect = canvas.getBoundingClientRect();
+                if (renderer) {
+                    renderer.setSize(rect.width, rect.height);
+                    camera.aspect = rect.width / rect.height;
+                    camera.updateProjectionMatrix();
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizeHandle.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
 
         // Initialize
         buildPalette();
