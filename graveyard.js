@@ -388,7 +388,7 @@ class Graveyard {
                 building = buildingModel.clone();
                 building.position.set(pos.x, 0, pos.z);
                 building.scale.setScalar(modelScale);
-                building.rotation.y = Math.floor(Math.random() * 6) * (Math.PI / 3);
+                // No random rotation - keep original orientation from designer
                 this.scene.add(building);
             }
         }
