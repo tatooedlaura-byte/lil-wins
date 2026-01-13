@@ -95,7 +95,7 @@ class Graveyard {
         // Camera
         const aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(8, 10, 8);
+        this.camera.position.set(12, 15, 12);
         this.camera.lookAt(0, 0, 0);
 
         // Renderer
@@ -141,7 +141,7 @@ class Graveyard {
         const groundSize = 40;
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
         const groundMat = new THREE.MeshStandardMaterial({
-            color: 0xd0d0d0,  // Light gray, almost white
+            color: 0xb0b0b0,  // Light gray
             roughness: 1.0,
             metalness: 0
         });
