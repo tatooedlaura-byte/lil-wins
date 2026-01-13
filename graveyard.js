@@ -137,6 +137,20 @@ class Graveyard {
         pumpkinLight.position.set(0, 2, 0);
         this.scene.add(pumpkinLight);
 
+        // Brown dirt ground plane as base
+        const groundSize = 20;
+        const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
+        const groundMat = new THREE.MeshStandardMaterial({
+            color: 0x3d2817,  // Dark brown dirt
+            roughness: 1.0,
+            metalness: 0
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.01;
+        ground.receiveShadow = true;
+        this.scene.add(ground);
+
         window.addEventListener('resize', () => this.onResize());
         this.animate();
     }
