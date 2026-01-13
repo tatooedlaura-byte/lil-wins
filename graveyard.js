@@ -397,7 +397,7 @@ class Graveyard {
 
     async placeHex(q, r, tileType, buildingType = null) {
         const pos = this.hexToWorld(q, r);
-        const modelScale = 0.5; // Scale down Halloween models to fit hex grid
+        const modelScale = 0.25; // Scale down Halloween models to fit hex grid
 
         let placedTile = null;
         const tileModel = await this.loadModel(tileType);
