@@ -2,6 +2,88 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+// Default kingdom starter template - a complete medieval village
+const DEFAULT_KINGDOM_TEMPLATE = [
+    // CENTER - Church
+    { q: 0, r: 0, layer: 1, asset: 'hex_grass' },
+    { q: 0, r: 0, layer: 2, asset: 'church' },
+    // RING 1 - Plaza
+    { q: 1, r: 0, layer: 1, asset: 'hex_grass' },
+    { q: 1, r: 0, layer: 2, asset: 'well' },
+    { q: 0, r: 1, layer: 1, asset: 'hex_grass' },
+    { q: 0, r: 1, layer: 2, asset: 'trees_A' },
+    { q: -1, r: 1, layer: 1, asset: 'hex_grass' },
+    { q: -1, r: 1, layer: 2, asset: 'trees_B' },
+    { q: -1, r: 0, layer: 1, asset: 'hex_grass' },
+    { q: -1, r: 0, layer: 2, asset: 'well' },
+    { q: 0, r: -1, layer: 1, asset: 'hex_grass' },
+    { q: 0, r: -1, layer: 2, asset: 'trees_A' },
+    { q: 1, r: -1, layer: 1, asset: 'hex_grass' },
+    { q: 1, r: -1, layer: 2, asset: 'trees_B' },
+    // RING 2 - Commercial
+    { q: 2, r: 0, layer: 1, asset: 'hex_grass' },
+    { q: 2, r: 0, layer: 2, asset: 'market' },
+    { q: 1, r: 1, layer: 1, asset: 'hex_grass' },
+    { q: 1, r: 1, layer: 2, asset: 'tavern' },
+    { q: -1, r: 2, layer: 1, asset: 'hex_grass' },
+    { q: -1, r: 2, layer: 2, asset: 'well' },
+    { q: -2, r: 1, layer: 1, asset: 'hex_grass' },
+    { q: -2, r: 1, layer: 2, asset: 'blacksmith' },
+    { q: -2, r: 0, layer: 1, asset: 'hex_grass' },
+    { q: -2, r: 0, layer: 2, asset: 'home_A' },
+    { q: -1, r: -1, layer: 1, asset: 'hex_grass' },
+    { q: -1, r: -1, layer: 2, asset: 'home_B' },
+    { q: 0, r: -2, layer: 1, asset: 'hex_grass' },
+    { q: 0, r: -2, layer: 2, asset: 'trees_A' },
+    { q: 1, r: -2, layer: 1, asset: 'hex_grass' },
+    { q: 1, r: -2, layer: 2, asset: 'home_A' },
+    { q: 2, r: -2, layer: 1, asset: 'hex_grass' },
+    { q: 2, r: -2, layer: 2, asset: 'home_B' },
+    { q: 2, r: -1, layer: 1, asset: 'hex_grass' },
+    { q: 2, r: -1, layer: 2, asset: 'well' },
+    { q: 0, r: 2, layer: 1, asset: 'hex_grass' },
+    { q: 0, r: 2, layer: 2, asset: 'trees_B' },
+    { q: -2, r: 2, layer: 1, asset: 'hex_grass' },
+    { q: -2, r: 2, layer: 2, asset: 'home_A' },
+    // RING 3 - Residential
+    { q: 3, r: 0, layer: 1, asset: 'hex_grass' },
+    { q: 3, r: 0, layer: 2, asset: 'home_A' },
+    { q: 3, r: -1, layer: 1, asset: 'hex_grass' },
+    { q: 3, r: -1, layer: 2, asset: 'home_B' },
+    { q: 3, r: -2, layer: 1, asset: 'hex_grass' },
+    { q: 3, r: -2, layer: 2, asset: 'trees_A' },
+    { q: 3, r: -3, layer: 1, asset: 'hex_grass' },
+    { q: 3, r: -3, layer: 2, asset: 'home_A' },
+    { q: 2, r: 1, layer: 1, asset: 'hex_grass' },
+    { q: 2, r: 1, layer: 2, asset: 'home_B' },
+    { q: 1, r: 2, layer: 1, asset: 'hex_grass' },
+    { q: 1, r: 2, layer: 2, asset: 'home_A' },
+    { q: 0, r: 3, layer: 1, asset: 'hex_grass' },
+    { q: 0, r: 3, layer: 2, asset: 'trees_B' },
+    { q: -1, r: 3, layer: 1, asset: 'hex_grass' },
+    { q: -1, r: 3, layer: 2, asset: 'home_B' },
+    { q: -2, r: 3, layer: 1, asset: 'hex_grass' },
+    { q: -2, r: 3, layer: 2, asset: 'home_A' },
+    { q: -3, r: 3, layer: 1, asset: 'hex_grass' },
+    { q: -3, r: 3, layer: 2, asset: 'windmill' },
+    { q: -3, r: 2, layer: 1, asset: 'hex_grass' },
+    { q: -3, r: 2, layer: 2, asset: 'home_B' },
+    { q: -3, r: 1, layer: 1, asset: 'hex_grass' },
+    { q: -3, r: 1, layer: 2, asset: 'trees_A' },
+    { q: -3, r: 0, layer: 1, asset: 'hex_grass' },
+    { q: -3, r: 0, layer: 2, asset: 'home_A' },
+    { q: -2, r: -1, layer: 1, asset: 'hex_grass' },
+    { q: -2, r: -1, layer: 2, asset: 'home_B' },
+    { q: -1, r: -2, layer: 1, asset: 'hex_grass' },
+    { q: -1, r: -2, layer: 2, asset: 'home_A' },
+    { q: 0, r: -3, layer: 1, asset: 'hex_grass' },
+    { q: 0, r: -3, layer: 2, asset: 'lumbermill' },
+    { q: 1, r: -3, layer: 1, asset: 'hex_grass' },
+    { q: 1, r: -3, layer: 2, asset: 'trees_B' },
+    { q: 2, r: -3, layer: 1, asset: 'hex_grass' },
+    { q: 2, r: -3, layer: 2, asset: 'home_B' },
+];
+
 // Kingdom class - 3D hexagonal medieval kingdom builder
 class Kingdom {
     constructor(container) {
@@ -567,13 +649,24 @@ class Kingdom {
         }
     }
 
-    // Load starter template created in kingdom-designer.html
+    // Load starter template (from localStorage or built-in default)
     async loadStarterTemplate() {
         const starterTemplate = localStorage.getItem('kingdomStarterTemplate');
-        if (!starterTemplate) return false;
+
+        // Use localStorage template if available, otherwise use built-in default
+        let items;
+        if (starterTemplate) {
+            try {
+                items = JSON.parse(starterTemplate);
+            } catch (e) {
+                console.warn('Invalid localStorage template, using default');
+                items = DEFAULT_KINGDOM_TEMPLATE;
+            }
+        } else {
+            items = DEFAULT_KINGDOM_TEMPLATE;
+        }
 
         try {
-            const items = JSON.parse(starterTemplate);
             console.log('Loading starter template with', items.length, 'items');
 
             // Group items by hex position
