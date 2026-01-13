@@ -79,7 +79,7 @@ class Graveyard {
         this.clock = new THREE.Clock();
         this.templateIndex = 0;
 
-        this.gridSpacing = 0.5; // Spacing between tiles on square grid
+        this.gridSpacing = 0.35; // Tighter spacing between tiles
         this.hexHeight = 0.1;
 
         this.init();
