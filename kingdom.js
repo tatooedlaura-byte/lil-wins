@@ -90,6 +90,7 @@ class Kingdom {
         this.container = container;
         this.hexes = []; // Array of placed hexes with buildings
         this.models = {}; // Cached loaded models
+        this.blueprint = DEFAULT_KINGDOM_TEMPLATE; // Build order template
         this.gridRadius = 10; // Hex grid radius (number of rings)
         this.mixers = []; // Animation mixers for characters
         this.characters = []; // Track characters for wandering
@@ -538,29 +539,44 @@ class Kingdom {
         }
     }
 
-    // Grow the kingdom - add a new hex with a building
+    // Grow the kingdom - add a new hex with a building from blueprint
     async grow(habitName = null) {
-        const spot = this.findEmptyAdjacentHex();
-        if (!spot) return null;
-
-        const zone = this.getZone(spot.q, spot.r);
-
-        // Determine tile and building based on zone
-        const zoneConfig = this.getBuildingForZone(zone);
-        let tileType = zoneConfig.tile;
-        let buildingType = zoneConfig.building;
-
-        // Small chance of water/coast on outskirts (for variety)
-        if (zone === 'outskirts' && !buildingType && Math.random() < 0.1) {
-            const waterTiles = ['hex_water', 'hex_coast_A', 'hex_coast_B'];
-            tileType = waterTiles[Math.floor(Math.random() * waterTiles.length)];
+        // Group blueprint items by hex position
+        const blueprintHexes = new Map();
+        for (const item of this.blueprint) {
+            const key = `${item.q},${item.r}`;
+            if (!blueprintHexes.has(key)) {
+                blueprintHexes.set(key, { q: item.q, r: item.r, tile: 'hex_grass', building: null });
+            }
+            const hex = blueprintHexes.get(key);
+            if (item.asset.startsWith('hex_')) {
+                hex.tile = item.asset;
+            } else {
+                hex.building = item.asset;
+            }
         }
 
-        const result = await this.placeHex(spot.q, spot.r, tileType, buildingType);
-        const worldPos = this.hexToWorld(spot.q, spot.r);
+        // Find the first blueprint hex that hasn't been built yet
+        let nextToBuild = null;
+        for (const [key, blueprintHex] of blueprintHexes) {
+            const existing = this.getHexAt(blueprintHex.q, blueprintHex.r);
+            if (!existing) {
+                nextToBuild = blueprintHex;
+                break;
+            }
+        }
+
+        // If all blueprint hexes are built, world is complete
+        if (!nextToBuild) {
+            return null;
+        }
+
+        const { q, r, tile, building } = nextToBuild;
+        await this.placeHex(q, r, tile, building);
+        const worldPos = this.hexToWorld(q, r);
 
         // Store habit info on the hex for tooltip
-        const hex = this.getHexAt(spot.q, spot.r);
+        const hex = this.getHexAt(q, r);
         if (hex && habitName) {
             hex.habitName = habitName;
         }
@@ -568,14 +584,14 @@ class Kingdom {
         // Pan camera to the new building
         this.panToPosition(worldPos.x, worldPos.z);
 
-        if (buildingType && this.modelDefs[buildingType]) {
+        if (building && this.modelDefs[building]) {
             return {
-                type: this.modelDefs[buildingType].type,
-                name: this.modelDefs[buildingType].name,
-                position: { q: spot.q, r: spot.r, x: worldPos.x, z: worldPos.z },
+                type: this.modelDefs[building].type,
+                name: this.modelDefs[building].name,
+                position: { q, r, x: worldPos.x, z: worldPos.z },
             };
         }
-        return { type: 'tile', name: 'Land', position: { q: spot.q, r: spot.r, x: worldPos.x, z: worldPos.z } };
+        return { type: 'tile', name: 'Land', position: { q, r, x: worldPos.x, z: worldPos.z } };
     }
 
     // Smoothly pan camera to look at a position
@@ -626,10 +642,18 @@ class Kingdom {
         // Support both old and new key names
         const saved = localStorage.getItem('tinyHabitsKingdom') || localStorage.getItem('tinyHabitsGarden');
 
-        // If no saved game, check for starter template
+        // If no saved game, start fresh (empty map, will build from blueprint as habits complete)
         if (!saved) {
-            const starterLoaded = await this.loadStarterTemplate();
-            return starterLoaded;
+            // Check for custom template in localStorage, otherwise use built-in default
+            const customTemplate = localStorage.getItem('kingdomStarterTemplate');
+            if (customTemplate) {
+                try {
+                    this.blueprint = JSON.parse(customTemplate);
+                } catch (e) {
+                    console.warn('Invalid custom template, using default');
+                }
+            }
+            return true;
         }
 
         try {
