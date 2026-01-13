@@ -859,17 +859,25 @@ function closeSidebar() {
 function resetCurrentWorld() {
     const worldNames = { kingdom: 'Kingdom', city: 'City', spacebase: 'Space Base', dungeon: 'Dungeon', graveyard: 'Graveyard' };
 
-    if (!confirm(`Reset ${worldNames[currentWorld]}? This will clear all buildings.`)) return;
+    if (!confirm(`Completely reset ${worldNames[currentWorld]}? This will clear all buildings AND habits, starting fresh.`)) return;
 
     const keys = {
-        kingdom: 'tinyHabitsGarden',
-        city: 'tinyHabitsCity',
-        spacebase: 'tinyHabitsSpaceBase',
-        dungeon: 'tinyHabitsDungeon',
-        graveyard: 'tinyHabitsGraveyard'
+        kingdom: ['tinyHabitsGarden', 'tinyHabitsKingdom'],
+        city: ['tinyHabitsCity'],
+        spacebase: ['tinyHabitsSpaceBase'],
+        dungeon: ['tinyHabitsDungeon'],
+        graveyard: ['tinyHabitsGraveyard']
     };
 
-    localStorage.removeItem(keys[currentWorld]);
+    // Clear all building data for this world
+    for (const key of keys[currentWorld]) {
+        localStorage.removeItem(key);
+    }
+
+    // Clear habits and onboarding to start completely fresh
+    localStorage.removeItem('lilWinsUserData');
+    localStorage.removeItem('lilWinsOnboarded');
+
     location.reload();
 }
 
