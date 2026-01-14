@@ -228,7 +228,12 @@ function setupTutorialListeners() {
 function endTutorial() {
     document.getElementById('tutorial-modal').classList.add('hidden');
     localStorage.setItem('lilWinsTutorialSeen', 'true');
-    showOnboarding();
+
+    // Only show onboarding if user hasn't picked habits yet
+    const hasOnboarded = localStorage.getItem('lilWinsOnboarded');
+    if (!hasOnboarded || userHabits.length === 0) {
+        showOnboarding();
+    }
 }
 
 // ============ INITIALIZATION ============
