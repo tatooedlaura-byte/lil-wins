@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighborhood Designer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a2a3a;
+            color: #eaeaea;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Asset Palette */
+        .palette {
+            width: 280px;
+            background: #162636;
+            padding: 16px;
+            overflow-y: auto;
+            border-right: 1px solid #2a4a6a;
+        }
+        .palette h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #5dade2;
+            margin-bottom: 12px;
+        }
+        .palette-section {
+            margin-bottom: 20px;
+        }
+        .palette-section h3 {
+            font-size: 12px;
+            color: #5dade2;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .palette-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .palette-item {
+            width: 70px;
+            height: 85px;
+            background: #1f3a5a;
+            border: 1px solid #2a4a6a;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 9px;
+            text-align: center;
+            transition: all 0.2s;
+            padding-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        .palette-item:hover {
+            background: #2a4a6a;
+            border-color: #5dade2;
+        }
+        .palette-item .thumbnail {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0d1a2a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .palette-item .thumbnail img {
+            max-width: 40px;
+            max-height: 40px;
+        }
+        .palette-item .code {
+            font-weight: bold;
+            color: #5dade2;
+        }
+        .palette-item .name {
+            color: #a0a0a0;
+            font-size: 7px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 66px;
+        }
+
+        /* Main Area */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            padding: 12px 20px;
+            background: #162636;
+            border-bottom: 1px solid #2a4a6a;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .toolbar button {
+            padding: 8px 16px;
+            background: #5dade2;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .toolbar button:hover {
+            background: #7ec8e3;
+        }
+        .toolbar button.secondary {
+            background: #2a4a6a;
+        }
+        .toolbar button.secondary:hover {
+            background: #3a5a7a;
+        }
+        .toolbar span {
+            color: #a0a0a0;
+            font-size: 13px;
+        }
+
+        /* Grid Container */
+        .grid-container {
+            flex: 1;
+            overflow: auto;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0d1a2a;
+        }
+
+        /* Grid */
+        .hex-grid {
+            position: relative;
+        }
+
+        /* Grid Cell */
+        .hex-cell {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: #1f3a5a;
+            border: 1px solid #2a4a6a;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .hex-cell:hover {
+            background: #2a4a6a;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        .hex-cell.drag-over {
+            background: #3a6a9a;
+        }
+        .hex-cell.has-item {
+            background: #2a5a4a;
+        }
+        .hex-cell.has-item:hover {
+            background: #3a6a5a;
+        }
+        .hex-cell.selected {
+            background: #4a7a6a;
+            box-shadow: 0 0 0 3px #ff9800;
+        }
+        .hex-cell .coords {
+            font-size: 8px;
+            color: #555;
+        }
+        .hex-cell .item-code {
+            font-weight: bold;
+            color: #5dade2;
+            font-size: 11px;
+        }
+        .hex-cell .item-name {
+            color: #ccc;
+            font-size: 7px;
+            max-width: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Resize Handle */
+        .resize-handle {
+            width: 6px;
+            background: #2a4a6a;
+            cursor: col-resize;
+        }
+        .resize-handle:hover {
+            background: #5dade2;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            width: 400px;
+            min-width: 200px;
+            max-width: 70vw;
+            background: #162636;
+            border-left: 1px solid #2a4a6a;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-panel h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #5dade2;
+            margin-bottom: 12px;
+        }
+        .preview-container {
+            flex: 1;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+            background: #0d1a2a;
+            border-radius: 8px;
+        }
+        #preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .output-section {
+            margin-top: 16px;
+            flex-shrink: 0;
+        }
+        .output-section h3 {
+            font-size: 12px;
+            color: #ff9800;
+            margin-bottom: 8px;
+        }
+        #output {
+            background: #0d1a2a;
+            border: 1px solid #2a4a6a;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 10px;
+            color: #5dade2;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .instructions {
+            padding: 8px 12px;
+            background: #1f3a5a;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #a0a0a0;
+            margin-bottom: 12px;
+        }
+        .instructions strong {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="palette">
+        <h2>Neighborhood Assets</h2>
+        <input type="text" id="search" placeholder="Search assets..." style="width: 100%; padding: 8px; margin-bottom: 12px; background: #1f3a5a; border: 1px solid #2a4a6a; border-radius: 4px; color: #eaeaea;">
+        <div id="palette-items"></div>
+    </div>
+
+    <div class="main">
+        <div class="toolbar">
+            <button onclick="clearGrid()">Clear Grid</button>
+            <button class="secondary" onclick="exportLayout()">Export Code</button>
+            <button class="secondary" onclick="copyToClipboard()">Copy Template</button>
+            <button class="secondary" onclick="importTemplate()">Import Template</button>
+            <span>Grid: <input type="number" id="grid-size" value="11" min="5" max="15" style="width: 50px; background: #1f3a5a; border: 1px solid #2a4a6a; border-radius: 4px; color: #eaeaea; padding: 4px;">
+            <button class="secondary" onclick="rebuildGrid()">Rebuild</button></span>
+            <span style="margin-left: auto;"><strong>R</strong>=rotate <strong>X</strong>=delete</span>
+        </div>
+
+        <div class="grid-container">
+            <div class="hex-grid" id="hex-grid"></div>
+        </div>
+    </div>
+
+    <div class="resize-handle" id="resize-handle"></div>
+    <div class="preview-panel" id="preview-panel">
+        <h2>3D Preview</h2>
+        <div class="instructions">
+            <strong>Drag</strong> assets onto grid cells.<br>
+            <strong>Click</strong> to select, <strong>R</strong> rotate, <strong>X</strong> delete.
+        </div>
+        <div class="preview-container">
+            <canvas id="preview-canvas"></canvas>
+        </div>
+        <div class="output-section">
+            <h3>Template Code</h3>
+            <div id="output">// Place items to generate code</div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const basePath = 'assets/tinytreats';
+
+        // All neighborhood assets
+        const assets = [
+            // Park features
+            { code: 'FNT', name: 'fountain', category: 'Park', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/fountain.gltf` },
+            { code: 'BNC', name: 'bench', category: 'Park', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/bench.gltf` },
+            { code: 'LMP', name: 'street_lantern', category: 'Park', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/street_lantern.gltf` },
+            { code: 'TRS', name: 'trashcan', category: 'Park', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/trashcan.gltf` },
+
+            // Nature
+            { code: 'TRE', name: 'tree', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/tree.gltf` },
+            { code: 'TRL', name: 'tree_large', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/tree_large.gltf` },
+            { code: 'BSH', name: 'bush', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/bush.gltf` },
+            { code: 'BSL', name: 'bush_large', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/bush_large.gltf` },
+            { code: 'FLA', name: 'flower_A', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/flower_A.gltf` },
+            { code: 'FLB', name: 'flower_B', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/flower_B.gltf` },
+            { code: 'GRA', name: 'grass_A', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/grass_A.gltf` },
+            { code: 'GRB', name: 'grass_B', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/grass_B.gltf` },
+            { code: 'BRD', name: 'bird', category: 'Nature', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/bird.gltf` },
+
+            // Hedges
+            { code: 'HDG', name: 'hedge_straight', category: 'Hedges', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/hedge_straight.gltf` },
+            { code: 'HDL', name: 'hedge_straight_long', category: 'Hedges', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/hedge_straight_long.gltf` },
+            { code: 'HDC', name: 'hedge_corner', category: 'Hedges', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/hedge_corner.gltf` },
+
+            // House
+            { code: 'HOU', name: 'house', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/house.gltf` },
+            { code: 'MBX', name: 'mailbox', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/mailbox.gltf` },
+            { code: 'BNA', name: 'bench_A', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/bench_A.gltf` },
+            { code: 'BNB', name: 'bench_B', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/bench_B.gltf` },
+            { code: 'DRM', name: 'doormat', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/doormat.gltf` },
+            { code: 'BOO', name: 'boots', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/boots.gltf` },
+            { code: 'PKG', name: 'package', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/package.gltf` },
+            { code: 'FLA', name: 'foliage_A', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/foliage_A.gltf` },
+            { code: 'FLB', name: 'foliage_B', category: 'House', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/foliage_B.gltf` },
+
+            // Fences
+            { code: 'FNS', name: 'fence_straight', category: 'Fences', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/fence_straight.gltf` },
+            { code: 'FNL', name: 'fence_straight_long', category: 'Fences', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/fence_straight_long.gltf` },
+            { code: 'FNC', name: 'fence_corner', category: 'Fences', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/fence_corner.gltf` },
+            { code: 'FNO', name: 'fence_open', category: 'Fences', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/fence_open.gltf` },
+            { code: 'GAT', name: 'gate_single', category: 'Fences', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/gate_single.gltf` },
+
+            // Playground
+            { code: 'SWL', name: 'swing_A_large', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/swing_A_large.gltf` },
+            { code: 'SWS', name: 'swing_A_small', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/swing_A_small.gltf` },
+            { code: 'SWB', name: 'swing_B_large', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/swing_B_large.gltf` },
+            { code: 'SLA', name: 'slide_A', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/slide_A.gltf` },
+            { code: 'SLB', name: 'slide_B', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/slide_B.gltf` },
+            { code: 'MGR', name: 'merry_go_round', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/merry_go_round.gltf` },
+            { code: 'SSL', name: 'seesaw_large', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/seesaw_large.gltf` },
+            { code: 'SSS', name: 'seesaw_small', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/seesaw_small.gltf` },
+            { code: 'MKA', name: 'monkeybar_A', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/monkeybar_A.gltf` },
+            { code: 'MKB', name: 'monkeybar_B', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/monkeybar_B.gltf` },
+            { code: 'SBR', name: 'sandbox_round', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/sandbox_round.gltf` },
+            { code: 'SBD', name: 'sandbox_round_decorated', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/sandbox_round_decorated.gltf` },
+            { code: 'SBS', name: 'sandbox_square', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/sandbox_square.gltf` },
+            { code: 'SHA', name: 'spring_horse_A', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/spring_horse_A.gltf` },
+            { code: 'SHB', name: 'spring_horse_B', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/spring_horse_B.gltf` },
+            { code: 'PIC', name: 'picnic_table', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/picnic_table.gltf` },
+            { code: 'SCA', name: 'sandcastle_A', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/sandcastle_A.gltf` },
+            { code: 'SCB', name: 'sandcastle_B', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/sandcastle_B.gltf` },
+            { code: 'BKA', name: 'bucket_A', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/bucket_A.gltf` },
+            { code: 'CRT', name: 'cart', category: 'Playground', path: `${basePath}/Tiny_Treats_Fun_Playground_1.0_FREE/Assets/gltf/cart.gltf` },
+
+            // Tiles/Paths
+            { code: 'CBL', name: 'cobble_stones', category: 'Paths', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/cobble_stones.gltf` },
+            { code: 'CBG', name: 'cobble_stones_large', category: 'Paths', path: `${basePath}/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/gltf/cobble_stones_large.gltf` },
+            { code: 'CBS', name: 'cobblestones', category: 'Paths', path: `${basePath}/Tiny_Treats_Homely_House_1.0_FREE/Assets/gltf/cobblestones.gltf` },
+
+            // Picnic
+            { code: 'PBR', name: 'picnic_basket_round', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/picnic_basket_round.gltf` },
+            { code: 'PBS', name: 'picnic_basket_square', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/picnic_basket_square.gltf` },
+            { code: 'BLB', name: 'blanket_blue', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/picnic_blanket_blue.gltf` },
+            { code: 'BLG', name: 'blanket_green', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/picnic_blanket_green.gltf` },
+            { code: 'BLR', name: 'blanket_red', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/picnic_blanket_red.gltf` },
+            { code: 'COL', name: 'cooler', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/cooler.gltf` },
+            { code: 'FRS', name: 'frisbee', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/frisbee.gltf` },
+            { code: 'RAD', name: 'radio', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/radio.gltf` },
+            { code: 'TEA', name: 'teapot', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/teapot.gltf` },
+            { code: 'TRM', name: 'thermos', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/thermos.gltf` },
+            { code: 'PLB', name: 'pillow_large_blue', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/pillow_large_blue.gltf` },
+            { code: 'PLG', name: 'pillow_large_green', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/pillow_large_green.gltf` },
+            { code: 'PLR', name: 'pillow_large_red', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/pillow_large_red.gltf` },
+            { code: 'SWH', name: 'sandwich', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/sandwich.gltf` },
+            { code: 'APL', name: 'apple', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/apple.gltf` },
+            { code: 'GRP', name: 'grapes', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/grapes.gltf` },
+            { code: 'JAM', name: 'jam', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/jam.gltf` },
+            { code: 'MUG', name: 'mug', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/mug.gltf` },
+            { code: 'WIN', name: 'wine_bottle', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/wine_bottle.gltf` },
+            { code: 'TRY', name: 'serving_tray', category: 'Picnic', path: `${basePath}/Tiny_Treats_Pleasant_Picnic_1.0_FREE/Assets/gltf/serving_tray_round.gltf` },
+        ];
+
+        let gridSize = 11;
+        let hexData = new Map();
+        let selectedHex = null;
+        let draggedAsset = null;
+
+        const CELL_SIZE = 72;
+
+        let scene, camera, renderer, controls;
+        const loader = new GLTFLoader();
+        const loadedModels = new Map();
+
+        // Thumbnail rendering
+        let thumbRenderer, thumbScene, thumbCamera;
+        const thumbnailQueue = [];
+        let isProcessingThumbnails = false;
+
+        function gridKey(x, y) {
+            return `${x},${y}`;
+        }
+
+        let ground;
+
+        function initThree() {
+            const canvas = document.getElementById('preview-canvas');
+            const container = document.querySelector('.preview-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 40, 100);
+
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambient);
+
+            const sun = new THREE.DirectionalLight(0xfff5e0, 1.0);
+            sun.position.set(10, 20, 10);
+            scene.add(sun);
+
+            // Ground - will be resized to match grid
+            const groundGeo = new THREE.PlaneGeometry(50, 50);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x7cba3d });
+            ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.01;
+            scene.add(ground);
+
+            updateCameraForGrid();
+            animate();
+        }
+
+        function updateCameraForGrid() {
+            // Grid uses spacing of 2 units, so total size is gridSize * 2
+            const worldSize = gridSize * 2;
+
+            // Position camera to see the whole grid from above at an angle
+            const distance = worldSize * 0.9;
+            camera.position.set(distance, distance * 0.8, distance);
+            camera.lookAt(0, 0, 0);
+            controls.target.set(0, 0, 0);
+
+            // Resize ground to match
+            ground.geometry.dispose();
+            ground.geometry = new THREE.PlaneGeometry(worldSize + 4, worldSize + 4);
+
+            // Update fog
+            scene.fog.near = worldSize;
+            scene.fog.far = worldSize * 3;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function initThumbnailRenderer() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+
+            thumbRenderer = new THREE.WebGLRenderer({
+                canvas,
+                antialias: true,
+                alpha: true,
+                preserveDrawingBuffer: true
+            });
+            thumbRenderer.setSize(100, 100);
+            thumbRenderer.setClearColor(0x0d1a2a, 1);
+
+            thumbScene = new THREE.Scene();
+            thumbScene.background = new THREE.Color(0x0d1a2a);
+
+            thumbCamera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+            thumbCamera.position.set(2, 2, 2);
+            thumbCamera.lookAt(0, 0.5, 0);
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            thumbScene.add(ambient);
+
+            const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+            directional.position.set(2, 3, 2);
+            thumbScene.add(directional);
+        }
+
+        function queueThumbnail(asset, container) {
+            thumbnailQueue.push({ asset, container });
+            processThumbnailQueue();
+        }
+
+        async function processThumbnailQueue() {
+            if (isProcessingThumbnails || thumbnailQueue.length === 0) return;
+            isProcessingThumbnails = true;
+
+            while (thumbnailQueue.length > 0) {
+                const { asset, container } = thumbnailQueue.shift();
+                await renderThumbnail(asset, container);
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            isProcessingThumbnails = false;
+        }
+
+        async function renderThumbnail(asset, container) {
+            try {
+                const gltf = await new Promise((resolve, reject) => {
+                    loader.load(asset.path, resolve, undefined, reject);
+                });
+
+                const toRemove = [];
+                thumbScene.traverse(obj => {
+                    if (obj.isMesh || obj.isGroup) toRemove.push(obj);
+                });
+                toRemove.forEach(obj => {
+                    if (obj.parent) obj.parent.remove(obj);
+                });
+
+                const model = gltf.scene.clone();
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 1.5 / maxDim;
+                model.scale.setScalar(scale);
+
+                model.position.x = -center.x * scale;
+                model.position.y = -center.y * scale + 0.5;
+                model.position.z = -center.z * scale;
+
+                thumbScene.add(model);
+                thumbRenderer.render(thumbScene, thumbCamera);
+
+                const dataURL = thumbRenderer.domElement.toDataURL('image/png');
+                const img = document.createElement('img');
+                img.src = dataURL;
+                img.style.maxWidth = '40px';
+                img.style.maxHeight = '40px';
+
+                container.innerHTML = '';
+                container.appendChild(img);
+
+                thumbScene.remove(model);
+            } catch (error) {
+                container.innerHTML = getIconForCategory(asset.category);
+            }
+        }
+
+        function getIconForCategory(category) {
+            const icons = {
+                'Park': '<span style="font-size:20px">⛲</span>',
+                'Nature': '<span style="font-size:20px">🌳</span>',
+                'Hedges': '<span style="font-size:20px">🌿</span>',
+                'House': '<span style="font-size:20px">🏠</span>',
+                'Fences': '<span style="font-size:20px">🚧</span>',
+                'Playground': '<span style="font-size:20px">🎠</span>',
+                'Paths': '<span style="font-size:20px">🪨</span>',
+                'Picnic': '<span style="font-size:20px">🧺</span>',
+            };
+            return icons[category] || '<span style="font-size:20px">❓</span>';
+        }
+
+        function buildPalette() {
+            const container = document.getElementById('palette-items');
+            const categories = {};
+
+            assets.forEach(asset => {
+                if (!categories[asset.category]) categories[asset.category] = [];
+                categories[asset.category].push(asset);
+            });
+
+            for (const [category, items] of Object.entries(categories)) {
+                const section = document.createElement('div');
+                section.className = 'palette-section';
+                section.innerHTML = `<h3>${category} (${items.length})</h3>`;
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'palette-items';
+
+                items.forEach(asset => {
+                    const item = document.createElement('div');
+                    item.className = 'palette-item';
+                    item.draggable = true;
+                    item.innerHTML = `
+                        <div class="thumbnail"><span class="loading">...</span></div>
+                        <span class="code">${asset.code}</span>
+                        <span class="name">${asset.name}</span>
+                    `;
+
+                    queueThumbnail(asset, item.querySelector('.thumbnail'));
+
+                    item.addEventListener('dragstart', () => {
+                        draggedAsset = asset;
+                        item.classList.add('dragging');
+                    });
+                    item.addEventListener('dragend', () => {
+                        item.classList.remove('dragging');
+                    });
+
+                    itemsDiv.appendChild(item);
+                });
+
+                section.appendChild(itemsDiv);
+                container.appendChild(section);
+            }
+        }
+
+        function buildGrid() {
+            const grid = document.getElementById('hex-grid');
+            grid.innerHTML = '';
+
+            const halfSize = Math.floor(gridSize / 2);
+            const gridWidth = gridSize * CELL_SIZE;
+            const gridHeight = gridSize * CELL_SIZE;
+
+            grid.style.width = gridWidth + 'px';
+            grid.style.height = gridHeight + 'px';
+
+            for (let y = -halfSize; y <= halfSize; y++) {
+                for (let x = -halfSize; x <= halfSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'hex-cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+
+                    const pixelX = (x + halfSize) * CELL_SIZE;
+                    const pixelY = (y + halfSize) * CELL_SIZE;
+
+                    cell.style.left = pixelX + 'px';
+                    cell.style.top = pixelY + 'px';
+
+                    cell.innerHTML = `<span class="coords">${x},${y}</span>`;
+
+                    cell.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        cell.classList.add('drag-over');
+                    });
+                    cell.addEventListener('dragleave', () => {
+                        cell.classList.remove('drag-over');
+                    });
+                    cell.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        cell.classList.remove('drag-over');
+                        if (draggedAsset) {
+                            placeItem(x, y, draggedAsset);
+                        }
+                    });
+                    cell.addEventListener('click', () => {
+                        selectCell(x, y, cell);
+                    });
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function placeItem(x, y, asset) {
+            hexData.set(gridKey(x, y), { item: asset, rotation: 0 });
+            updateCellDisplay(x, y);
+            updatePreview();
+            updateOutput();
+        }
+
+        function updateCellDisplay(x, y) {
+            const cell = document.querySelector(`.hex-cell[data-x="${x}"][data-y="${y}"]`);
+            if (!cell) return;
+
+            const data = hexData.get(gridKey(x, y));
+
+            if (data && data.item) {
+                cell.classList.add('has-item');
+                cell.innerHTML = `
+                    <span class="item-code">${data.item.code}</span>
+                    <span class="item-name">${data.item.name}</span>
+                `;
+            } else {
+                cell.classList.remove('has-item');
+                cell.innerHTML = `<span class="coords">${x},${y}</span>`;
+            }
+        }
+
+        function selectCell(x, y, cell) {
+            document.querySelectorAll('.hex-cell.selected').forEach(c => c.classList.remove('selected'));
+
+            if (hexData.has(gridKey(x, y))) {
+                cell.classList.add('selected');
+                selectedHex = { x, y };
+            } else {
+                selectedHex = null;
+            }
+        }
+
+        async function updatePreview() {
+            const toRemove = [];
+            scene.traverse(obj => {
+                if (obj.userData.isPlacedItem) toRemove.push(obj);
+            });
+            toRemove.forEach(obj => scene.remove(obj));
+
+            const spacing = 2;
+
+            for (const [key, data] of hexData.entries()) {
+                const [x, y] = key.split(',').map(Number);
+                const worldX = spacing * x;
+                const worldZ = spacing * y;
+
+                try {
+                    const model = await loadModel(data.item.path);
+                    if (model) {
+                        const clone = model.clone();
+                        clone.position.set(worldX, 0, worldZ);
+                        clone.rotation.y = (data.rotation * Math.PI) / 180;
+                        clone.userData.isPlacedItem = true;
+                        scene.add(clone);
+                    }
+                } catch (e) {
+                    console.log('Could not load:', data.item.name);
+                }
+            }
+        }
+
+        async function loadModel(path) {
+            if (loadedModels.has(path)) return loadedModels.get(path);
+
+            return new Promise((resolve) => {
+                loader.load(
+                    path,
+                    (gltf) => {
+                        loadedModels.set(path, gltf.scene);
+                        resolve(gltf.scene);
+                    },
+                    undefined,
+                    () => {
+                        loadedModels.set(path, null);
+                        resolve(null);
+                    }
+                );
+            });
+        }
+
+        function updateOutput() {
+            const items = [];
+
+            for (const [key, data] of hexData.entries()) {
+                const [x, y] = key.split(',').map(Number);
+                items.push({
+                    q: x, r: y,
+                    tile: 'floor_grass',
+                    building: data.item.name
+                });
+            }
+
+            const output = document.getElementById('output');
+            if (items.length === 0) {
+                output.textContent = '// Place items to generate code';
+            } else {
+                output.textContent = `const neighborhoodTemplate = [\n${items.map(i =>
+                    `    { q: ${i.q}, r: ${i.r}, tile: '${i.tile}', building: '${i.building}' }`
+                ).join(',\n')}\n];`;
+            }
+        }
+
+        window.clearGrid = function() {
+            hexData.clear();
+            const halfSize = Math.floor(gridSize / 2);
+            for (let y = -halfSize; y <= halfSize; y++) {
+                for (let x = -halfSize; x <= halfSize; x++) {
+                    updateCellDisplay(x, y);
+                }
+            }
+            updatePreview();
+            updateOutput();
+        };
+
+        window.exportLayout = function() {
+            updateOutput();
+        };
+
+        window.copyToClipboard = function() {
+            navigator.clipboard.writeText(document.getElementById('output').textContent)
+                .then(() => alert('Copied to clipboard!'));
+        };
+
+        window.importTemplate = function() {
+            const input = prompt('Paste your template code:');
+            if (!input) return;
+
+            try {
+                // Extract the array from the code
+                const match = input.match(/\[[\s\S]*\]/);
+                if (!match) {
+                    alert('Could not find template array in the pasted code');
+                    return;
+                }
+
+                const items = eval(match[0]);
+
+                // Clear existing
+                hexData.clear();
+                const halfSize = Math.floor(gridSize / 2);
+                for (let y = -halfSize; y <= halfSize; y++) {
+                    for (let x = -halfSize; x <= halfSize; x++) {
+                        updateCellDisplay(x, y);
+                    }
+                }
+
+                // Find assets by name
+                const assetByName = {};
+                assets.forEach(a => assetByName[a.name] = a);
+
+                // Place items
+                let placed = 0;
+                for (const item of items) {
+                    const asset = assetByName[item.building];
+                    if (asset) {
+                        hexData.set(gridKey(item.q, item.r), { item: asset, rotation: 0 });
+                        updateCellDisplay(item.q, item.r);
+                        placed++;
+                    }
+                }
+
+                updatePreview();
+                updateOutput();
+                alert(`Imported ${placed} items!`);
+            } catch (e) {
+                alert('Error parsing template: ' + e.message);
+            }
+        };
+
+        window.rebuildGrid = function() {
+            gridSize = parseInt(document.getElementById('grid-size').value) || 11;
+            hexData.clear();
+            buildGrid();
+            updateCameraForGrid();
+            updatePreview();
+            updateOutput();
+        };
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!selectedHex) return;
+            const { x, y } = selectedHex;
+            const key = gridKey(x, y);
+            const data = hexData.get(key);
+            if (!data) return;
+
+            if (e.key === 'r' || e.key === 'R') {
+                data.rotation = (data.rotation + 45) % 360;
+                updatePreview();
+            } else if (e.key === 'x' || e.key === 'X' || e.key === 'Delete') {
+                hexData.delete(key);
+                updateCellDisplay(x, y);
+                selectedHex = null;
+                updatePreview();
+                updateOutput();
+            }
+        });
+
+        // Search
+        document.getElementById('search').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.palette-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+
+        // Resize panel
+        const resizeHandle = document.getElementById('resize-handle');
+        const previewPanel = document.getElementById('preview-panel');
+        let isResizing = false;
+
+        function updateRendererSize() {
+            const container = document.querySelector('.preview-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            if (width > 0 && height > 0) {
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            }
+        }
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const newWidth = window.innerWidth - e.clientX;
+            if (newWidth >= 200 && newWidth <= window.innerWidth * 0.7) {
+                previewPanel.style.width = newWidth + 'px';
+                requestAnimationFrame(updateRendererSize);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                updateRendererSize();
+            }
+        });
+
+        window.addEventListener('resize', updateRendererSize);
+
+        // Initialize
+        initThree();
+        initThumbnailRenderer();
+        buildPalette();
+        buildGrid();
+    </script>
+</body>
+</html>

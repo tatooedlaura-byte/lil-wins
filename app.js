@@ -4,7 +4,7 @@
  */
 
 // World instances
-let kingdom, city, spacebase, dungeon, graveyard;
+let kingdom, city, spacebase, dungeon, graveyard, neighborhood;
 let currentWorld = 'kingdom';
 
 // User data
@@ -25,7 +25,8 @@ const UNLOCK_REQUIREMENTS = {
     city: { type: 'streak', value: 0, message: 'Complete a 3-day streak to unlock the City!' },
     spacebase: { type: 'streak', value: 0, message: 'Complete a 7-day streak to unlock Space Base!' },
     dungeon: { type: 'streak', value: 0, message: 'Complete a 14-day streak to unlock the Dungeon!' },
-    graveyard: { type: 'streak', value: 0, message: 'Complete a 21-day streak to unlock the Graveyard!' }
+    graveyard: { type: 'streak', value: 0, message: 'Complete a 21-day streak to unlock the Graveyard!' },
+    neighborhood: { type: 'streak', value: 0, message: 'Complete a 28-day streak to unlock the Neighborhood!' },
 };
 
 // Curated preset habits (reduced from 150+ to manageable categories)
@@ -440,7 +441,7 @@ async function toggleHabit(habitName) {
         checkWorldUnlocks();
 
         // Grow the world and get building info
-        const worlds = { kingdom, city, spacebase, dungeon, graveyard };
+        const worlds = { kingdom, city, spacebase, dungeon, graveyard, neighborhood };
         const world = worlds[currentWorld];
         const buildingInfo = await world.grow(habitName);
 
@@ -520,7 +521,7 @@ function isWorldUnlocked(worldName) {
 }
 
 function checkWorldUnlocks() {
-    const worlds = ['city', 'spacebase', 'dungeon', 'graveyard'];
+    const worlds = ['city', 'spacebase', 'dungeon', 'graveyard', 'neighborhood'];
 
     for (const worldName of worlds) {
         const wasLocked = !localStorage.getItem(`lilWins_${worldName}_unlocked`);
@@ -566,7 +567,8 @@ function updateWorldSelector() {
         city: 'Build your city, one win at a time',
         spacebase: 'Explore the cosmos, one win at a time',
         dungeon: 'Discover secrets, one win at a time',
-        graveyard: 'Haunt the night, one win at a time'
+        graveyard: 'Haunt the night, one win at a time',
+        neighborhood: 'Grow your cozy corner, one win at a time',
     };
     document.getElementById('world-subtitle').textContent = subtitles[currentWorld];
 }
@@ -579,7 +581,7 @@ async function switchWorld(worldName) {
     }
 
     const container = document.getElementById('kingdom-container');
-    const worlds = { kingdom, city, spacebase, dungeon, graveyard };
+    const worlds = { kingdom, city, spacebase, dungeon, graveyard, neighborhood };
 
     // Save and cleanup current world
     if (worlds[currentWorld]) {
@@ -615,6 +617,10 @@ async function switchWorld(worldName) {
         graveyard = new Graveyard(container);
         await waitForLoad(graveyard);
         await graveyard.load();
+    } else if (worldName === 'neighborhood') {
+        neighborhood = new Neighborhood(container);
+        await waitForLoad(neighborhood);
+        await neighborhood.load();
     } else {
         kingdom = new Kingdom(container);
         await waitForLoad(kingdom);
@@ -634,7 +640,7 @@ function updateUI() {
     document.getElementById('mobile-streak-count').textContent = currentStreak;
 
     // Update stats
-    const worlds = { kingdom, city, spacebase, dungeon, graveyard };
+    const worlds = { kingdom, city, spacebase, dungeon, graveyard, neighborhood };
     const world = worlds[currentWorld];
     if (world) {
         const stats = world.getStats();
@@ -857,7 +863,7 @@ function closeSidebar() {
 }
 
 function resetCurrentWorld() {
-    const worldNames = { kingdom: 'Kingdom', city: 'City', spacebase: 'Space Base', dungeon: 'Dungeon', graveyard: 'Graveyard' };
+    const worldNames = { kingdom: 'Kingdom', city: 'City', spacebase: 'Space Base', dungeon: 'Dungeon', graveyard: 'Graveyard', neighborhood: 'Neighborhood' };
 
     if (!confirm(`Completely reset ${worldNames[currentWorld]}? This will clear all buildings AND habits, starting fresh.`)) return;
 
@@ -866,7 +872,8 @@ function resetCurrentWorld() {
         city: ['tinyHabitsCity'],
         spacebase: ['tinyHabitsSpaceBase'],
         dungeon: ['tinyHabitsDungeon'],
-        graveyard: ['tinyHabitsGraveyard']
+        graveyard: ['tinyHabitsGraveyard'],
+        neighborhood: ['tinyHabitsNeighborhood']
     };
 
     // Clear all building data for this world
