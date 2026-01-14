@@ -102,18 +102,152 @@ const MESSAGES = {
     ]
 };
 
+// ============ TUTORIAL ============
+
+const TUTORIAL_SLIDES = [
+    {
+        title: "Welcome to Lil' Wins!",
+        content: "Small habits, big results. Complete tiny daily habits and watch your world grow.",
+        icon: "🌟",
+        type: 'icon'
+    },
+    {
+        title: "Build Your World",
+        content: "Every habit you complete adds a new building to your kingdom. Watch it come alive!",
+        type: 'animation'
+    },
+    {
+        title: "Keep Your Streak",
+        content: "Complete at least one habit daily to maintain your streak. Longer streaks unlock new worlds!",
+        type: 'streak'
+    },
+    {
+        title: "Unlock New Worlds",
+        content: "3-day streak unlocks City. 7 days unlocks Space Base. How far can you go?",
+        type: 'worlds'
+    }
+];
+
+let tutorialSlideIndex = 0;
+
+function showTutorial() {
+    const modal = document.getElementById('tutorial-modal');
+    modal.classList.remove('hidden');
+    tutorialSlideIndex = 0;
+    renderTutorialSlide();
+    setupTutorialListeners();
+}
+
+function renderTutorialSlide() {
+    const slide = TUTORIAL_SLIDES[tutorialSlideIndex];
+    const container = document.getElementById('tutorial-slides');
+
+    let contentHtml = '<div class="tutorial-slide">';
+
+    // Render based on slide type
+    switch (slide.type) {
+        case 'icon':
+            contentHtml += `<div class="tutorial-icon">${slide.icon}</div>`;
+            break;
+        case 'animation':
+            contentHtml += `
+                <div class="building-animation">
+                    <div class="ground"></div>
+                    <div class="building b1">🏠</div>
+                    <div class="building b2">🏪</div>
+                    <div class="building b3">⛪</div>
+                    <div class="building b4">🏰</div>
+                </div>
+            `;
+            break;
+        case 'streak':
+            contentHtml += `
+                <div class="streak-demo">
+                    <span class="fire">🔥</span>
+                    <span class="count">7</span>
+                </div>
+            `;
+            break;
+        case 'worlds':
+            contentHtml += `
+                <div class="tutorial-worlds">
+                    <div class="tutorial-world"><span>🏰</span><span>Kingdom</span><span class="unlocked">Day 1</span></div>
+                    <div class="tutorial-world"><span>🏙️</span><span>City</span><span>3 days</span></div>
+                    <div class="tutorial-world"><span>🚀</span><span>Space</span><span>7 days</span></div>
+                    <div class="tutorial-world"><span>🏛️</span><span>Dungeon</span><span>14 days</span></div>
+                </div>
+            `;
+            break;
+    }
+
+    contentHtml += `<h2>${slide.title}</h2>`;
+    contentHtml += `<p>${slide.content}</p>`;
+    contentHtml += '</div>';
+
+    container.innerHTML = contentHtml;
+
+    // Update dots
+    renderTutorialDots();
+
+    // Update button text
+    const nextBtn = document.getElementById('tutorial-next');
+    nextBtn.textContent = tutorialSlideIndex === TUTORIAL_SLIDES.length - 1 ? "Let's Go!" : "Next";
+}
+
+function renderTutorialDots() {
+    const container = document.getElementById('tutorial-dots');
+    container.innerHTML = TUTORIAL_SLIDES.map((_, i) =>
+        `<span class="dot ${i === tutorialSlideIndex ? 'active' : ''}"></span>`
+    ).join('');
+}
+
+function setupTutorialListeners() {
+    const nextBtn = document.getElementById('tutorial-next');
+    const skipBtn = document.getElementById('tutorial-skip');
+
+    // Remove old listeners by cloning
+    const newNextBtn = nextBtn.cloneNode(true);
+    const newSkipBtn = skipBtn.cloneNode(true);
+    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+    skipBtn.parentNode.replaceChild(newSkipBtn, skipBtn);
+
+    newNextBtn.addEventListener('click', () => {
+        if (tutorialSlideIndex < TUTORIAL_SLIDES.length - 1) {
+            tutorialSlideIndex++;
+            renderTutorialSlide();
+        } else {
+            endTutorial();
+        }
+    });
+
+    newSkipBtn.addEventListener('click', endTutorial);
+}
+
+function endTutorial() {
+    document.getElementById('tutorial-modal').classList.add('hidden');
+    localStorage.setItem('lilWinsTutorialSeen', 'true');
+    showOnboarding();
+}
+
 // ============ INITIALIZATION ============
 
 async function init() {
     // Check if user has completed onboarding
     const hasOnboarded = localStorage.getItem('lilWinsOnboarded');
+    const hasTutorialSeen = localStorage.getItem('lilWinsTutorialSeen');
 
     loadUserData();
 
     if (!hasOnboarded || userHabits.length === 0) {
-        showOnboarding();
+        // Show tutorial first if never seen
+        if (!hasTutorialSeen) {
+            showTutorial();
+        } else {
+            showOnboarding();
+        }
     } else {
         document.getElementById('onboarding-modal').classList.add('hidden');
+        document.getElementById('tutorial-modal').classList.add('hidden');
         await initializeApp();
     }
 }
@@ -151,6 +285,11 @@ async function initializeApp() {
     setupEventListeners();
     renderHabits();
     updateUI();
+
+    // Initialize notifications
+    if (window.NotificationManager) {
+        await window.NotificationManager.init();
+    }
 
     // Show welcome message
     setTimeout(() => {
@@ -718,6 +857,24 @@ function showHistoryModal() {
     renderCalendar();
 }
 
+function showSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.remove('hidden');
+
+    // Load current settings
+    if (window.NotificationManager) {
+        const settings = window.NotificationManager.getSettings();
+        document.getElementById('notification-toggle').checked = settings.enabled;
+        document.getElementById('notification-time').value = settings.time;
+        document.getElementById('notification-time-row').classList.toggle('visible', settings.enabled);
+
+        // Clear any previous status
+        const status = document.getElementById('notification-status');
+        status.className = 'settings-status';
+        status.textContent = '';
+    }
+}
+
 function renderCalendar(date = new Date()) {
     const container = document.getElementById('calendar-container');
     const year = date.getFullYear();
@@ -818,6 +975,56 @@ function setupEventListeners() {
         if (confirm('This will let you re-select your habits. Continue?')) {
             localStorage.removeItem('lilWinsOnboarded');
             location.reload();
+        }
+    });
+
+    // Settings button
+    document.getElementById('settings-btn')?.addEventListener('click', showSettingsModal);
+
+    // Close settings
+    document.getElementById('close-settings')?.addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.add('hidden');
+    });
+
+    // Notification toggle
+    document.getElementById('notification-toggle')?.addEventListener('change', async (e) => {
+        const enabled = e.target.checked;
+        const timeInput = document.getElementById('notification-time');
+        const time = timeInput.value || '09:00';
+        const timeRow = document.getElementById('notification-time-row');
+        const status = document.getElementById('notification-status');
+
+        timeRow.classList.toggle('visible', enabled);
+
+        if (window.NotificationManager) {
+            const result = await window.NotificationManager.toggle(enabled, time);
+
+            if (enabled && !result.success) {
+                e.target.checked = false;
+                timeRow.classList.remove('visible');
+                status.className = 'settings-status error visible';
+                status.textContent = result.message;
+            } else if (enabled) {
+                status.className = 'settings-status success visible';
+                status.textContent = result.message;
+            } else {
+                status.className = 'settings-status';
+                status.classList.remove('visible');
+                status.textContent = '';
+            }
+        }
+    });
+
+    // Time change
+    document.getElementById('notification-time')?.addEventListener('change', async (e) => {
+        const time = e.target.value;
+        const enabled = document.getElementById('notification-toggle').checked;
+        const status = document.getElementById('notification-status');
+
+        if (enabled && window.NotificationManager) {
+            const result = await window.NotificationManager.toggle(true, time);
+            status.className = 'settings-status success visible';
+            status.textContent = `Reminder updated to ${window.NotificationManager.formatTime(time)} daily`;
         }
     });
 

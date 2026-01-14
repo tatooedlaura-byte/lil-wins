@@ -1,0 +1,15 @@
+{
+  "appId": "com.lilwins.app",
+  "appName": "Lil' Wins",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#e94560"
+    }
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
