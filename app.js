@@ -175,6 +175,8 @@ function renderTutorialSlide() {
                     <div class="tutorial-world"><span>🏙️</span><span>City</span><span>3 days</span></div>
                     <div class="tutorial-world"><span>🚀</span><span>Space</span><span>7 days</span></div>
                     <div class="tutorial-world"><span>🏛️</span><span>Dungeon</span><span>14 days</span></div>
+                    <div class="tutorial-world"><span>🪦</span><span>Graveyard</span><span>21 days</span></div>
+                    <div class="tutorial-world"><span>🏡</span><span>Neighborhood</span><span>28 days</span></div>
                 </div>
             `;
             break;
