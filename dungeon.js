@@ -99,7 +99,7 @@ class Dungeon {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
-        this.controls.minDistance = 10;
+        this.controls.minDistance = 3;
         this.controls.maxDistance = 60;
         this.controls.maxPolarAngle = Math.PI / 2.2;
 
