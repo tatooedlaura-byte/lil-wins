@@ -161,7 +161,7 @@ class SpaceBase {
         // Camera
         const aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(20, 25, 20);
+        this.camera.position.set(15, 18, 15);
         this.camera.lookAt(0, 0, 0);
 
         // Renderer
@@ -176,8 +176,8 @@ class SpaceBase {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
-        this.controls.minDistance = 10;
-        this.controls.maxDistance = 60;
+        this.controls.minDistance = 8;
+        this.controls.maxDistance = 35;
         this.controls.maxPolarAngle = Math.PI / 2.2;
 
         // Lighting - Mars style with warm tones
@@ -207,7 +207,7 @@ class SpaceBase {
         this.scene.add(pointLight2);
 
         // Ground plane - Mars red dirt surface
-        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundGeometry = new THREE.PlaneGeometry(35, 35);
         const groundMaterial = new THREE.MeshStandardMaterial({
             color: 0x8b4513, // Mars rusty red-brown
             roughness: 0.95,
