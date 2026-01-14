@@ -145,11 +145,20 @@ class Neighborhood {
         fillLight.position.set(-10, 10, -10);
         this.scene.add(fillLight);
 
-        // Green grass ground
+        // Green grass ground with texture matching the tiles
         const groundSize = 30;
         const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
+
+        // Load the grass texture
+        const textureLoader = new THREE.TextureLoader();
+        const grassTexture = textureLoader.load('assets/tinytreats/Tiny_Treats_Pretty_Park_1.0_FREE/Assets/Textures/tiny_treats_grass_texture.png');
+        grassTexture.wrapS = THREE.RepeatWrapping;
+        grassTexture.wrapT = THREE.RepeatWrapping;
+        grassTexture.repeat.set(15, 15); // Tile the texture across the ground
+        grassTexture.colorSpace = THREE.SRGBColorSpace;
+
         const groundMat = new THREE.MeshStandardMaterial({
-            color: 0x7cba3d,
+            map: grassTexture,
             roughness: 1.0,
             metalness: 0
         });
