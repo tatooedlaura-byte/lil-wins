@@ -1159,7 +1159,7 @@ h1 {
 
     /* Always-visible habits panel at bottom */
     .mobile-sheet {
-        display: block;
+        display: block !important;
         position: fixed;
         bottom: 0;
         left: 0;
@@ -1171,10 +1171,13 @@ h1 {
         border-radius: 16px 16px 0 0;
         overflow-y: auto;
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        background: var(--bg-sidebar);
+        z-index: 100;
     }
 
-    .mobile-sheet.hidden {
-        display: block;
+    .mobile-sheet.hidden,
+    .mobile-sheet.visible {
+        display: block !important;
         transform: none !important;
     }
 
@@ -1184,6 +1187,12 @@ h1 {
     }
 
     .sheet-content {
+        padding: 0 16px 20px;
+        max-height: none;
+        overflow-y: auto;
+    }
+
+    #mobile-habits-list {
         padding-bottom: 20px;
     }
 
