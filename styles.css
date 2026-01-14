@@ -1143,30 +1143,56 @@ h1 {
         display: block;
     }
 
+    /* Split view: 3D world on top, habits on bottom */
     .city-view {
-        height: calc(100vh - 56px);
+        height: 55vh;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
     }
 
+    /* Hide FAB - not needed with split view */
     .mobile-fab {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: none !important;
     }
 
+    /* Always-visible habits panel at bottom */
     .mobile-sheet {
         display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: calc(56px + 55vh);
+        max-height: none;
+        height: auto;
+        transform: none !important;
+        border-radius: 16px 16px 0 0;
+        overflow-y: auto;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     }
 
     .mobile-sheet.hidden {
         display: block;
-        transform: translateY(100%);
+        transform: none !important;
+    }
+
+    /* Hide the drag handle since sheet is always visible */
+    .sheet-handle {
+        display: none;
+    }
+
+    .sheet-content {
+        padding-bottom: 20px;
     }
 
     .toast {
-        bottom: 100px;
+        bottom: auto;
+        top: calc(56px + 55vh - 70px);
         left: 20px;
         right: 20px;
-        transform: translateY(20px);
+        transform: translateY(-20px);
         max-width: none;
     }
 
