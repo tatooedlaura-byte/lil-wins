@@ -981,6 +981,11 @@ function setupEventListeners() {
     // Settings button
     document.getElementById('settings-btn')?.addEventListener('click', showSettingsModal);
 
+    // Help button - show tutorial
+    document.getElementById('help-btn')?.addEventListener('click', () => {
+        showTutorial();
+    });
+
     // Close settings
     document.getElementById('close-settings')?.addEventListener('click', () => {
         document.getElementById('settings-modal').classList.add('hidden');

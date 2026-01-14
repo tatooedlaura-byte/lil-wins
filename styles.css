@@ -67,6 +67,31 @@ body {
     font-weight: 600;
 }
 
+.mobile-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.help-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--text-muted);
+    background: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.help-btn:active {
+    background: var(--surface);
+}
+
 /* Sidebar */
 .sidebar {
     width: 320px;
